@@ -1,0 +1,8 @@
+extract:
+    ResourceExtractor.py
+        ResourceProducer.py
+        EnveloppedResourceFile.py
+            ResourceFactory.py
+                ResourceContainer.py
+                MetaData.py ===> ok
+

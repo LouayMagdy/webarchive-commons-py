@@ -1,0 +1,5 @@
+ResourceExtractor
+==> ProducerUtils
+    ==> ResourceProducer
+    ==> EnvelopedResourceFile ==> ResourceFactory
+                                    ==> ResourceContainer
