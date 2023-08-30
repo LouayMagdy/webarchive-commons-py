@@ -1,5 +1,8 @@
 ResourceExtractor
 ==> ProducerUtils
-    ==> ResourceProducer
-    ==> EnvelopedResourceFile ==> ResourceFactory
-                                    ==> ResourceContainer
+    ==> EnvelopedResourceFile
+            ===> GenericResourceProducer
+                    ===> GenericStreamResource
+                            ===> AbstractResource
+                            ===> ResourceConstants
+

@@ -2,7 +2,13 @@ extract:
     ResourceExtractor.py
         ResourceProducer.py
         EnveloppedResourceFile.py
-            ResourceFactory.py ---------------------> ok
-                ResourceContainer.py
+            ResourceFactory.py ---------------------> ok but still need to use input-stream
+                ResourceContainer.py ----------------> ok
                 MetaData.py --------------------> ok
+            GenericResourceProducer
+                GenericStreamResource
+                    AbstractResource
+                    ResourceConstants.py ---------------> ok
+                        ARCConstants.py -------------> ok
+                        WARCConstants.py -------------> ok
 

@@ -14,6 +14,10 @@ class MetaData(dict):
                 parent_meta_data.put(name, self)
 
     def get(self, key):
+        """
+        :param key:
+        :return: int, long, boolean, object, child,...
+        """
         try:
             return super().__getitem__(key)
         except KeyError as e:
@@ -21,6 +25,11 @@ class MetaData(dict):
             return None
 
     def put(self, key, value):
+        """
+        :param key:
+        :param value: int, long, boolean, object, child,...
+        :return: metadata
+        """
         try:
             super().__setitem__(key, value)
             return self
@@ -36,7 +45,7 @@ class MetaData(dict):
     def set_top_meta_data(self, top_meta_data):
         self._topMetaData = top_meta_data
 
-    def create_child(self, name):
+    def create_child(self, name=None):
         return MetaData(self, name)
 
     def append_child(self, key, child):
@@ -63,7 +72,7 @@ class MetaData(dict):
         except KeyError as e:
             self._logger.warning(e)
 
-
+#
 # metadata = MetaData()
 # metadata.put("first", 1)
 # metadata.put("second", "ok")
@@ -71,6 +80,9 @@ class MetaData(dict):
 # print(metadata.get("first"), metadata.get("second"), metadata.get("third"))
 # child1 = metadata.create_child("c1")
 # child2 = metadata.create_child("c2")
+# print(f"parent of child1:{child1.get_top_meta_data()}")
+# child4 = child1.create_child("c4")
+# print(f"parent of child4:{child4.get_top_meta_data()}")
 # metadata.append_child("c1", child2)
 # metadata.append_child("c3", child2)
 # print(metadata.get("c1"), metadata.get("c3"))

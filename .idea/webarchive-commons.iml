@@ -11,6 +11,7 @@
     <option name="namespacePackageFolders">
       <list>
         <option value="$MODULE_DIR$/extract" />
+        <option value="$MODULE_DIR$/resource" />
       </list>
     </option>
   </component>
