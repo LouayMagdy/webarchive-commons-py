@@ -1,14 +1,14 @@
-extract:
-    ResourceExtractor.py
-        ResourceProducer.py
-        EnveloppedResourceFile.py
-            ResourceFactory.py ---------------------> ok but still need to use input-stream
-                ResourceContainer.py ----------------> ok
-                MetaData.py --------------------> ok
-            GenericResourceProducer
-                GenericStreamResource
-                    AbstractResource
-                    ResourceConstants.py ---------------> ok
-                        ARCConstants.py -------------> ok
-                        WARCConstants.py -------------> ok
-
+ResourceExtractor.py
+    ResourceProducer.py
+    EnveloppedResourceFile.py
+        ResourceFactory.py ---------------------> ok ######## but still needs to use input-stream
+            ResourceContainer.py ----------------> ok
+            MetaData.py --------------------> ok
+        GenericResourceProducer.py
+            GenericStreamResource.py
+                ResourceConstants.py ---------------> ok
+                    ARCConstants.py -------------> ok
+                    WARCConstants.py -------------> ok
+                AbstractResource  ------------> ok ######## I replaced output-stream with a file path.... still need input-stream
+                    Resource.py --------------> ok
+                StreamWrappedInputStream.py

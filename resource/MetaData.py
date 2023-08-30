@@ -72,7 +72,7 @@ class MetaData(dict):
         except KeyError as e:
             self._logger.warning(e)
 
-#
+
 # metadata = MetaData()
 # metadata.put("first", 1)
 # metadata.put("second", "ok")
@@ -88,3 +88,4 @@ class MetaData(dict):
 # print(metadata.get("c1"), metadata.get("c3"))
 # metadata.append_obj("key", "a", 1, "b", 2, "c", False)
 # print(metadata.get("key"))
+# print(json.dumps(child1))
