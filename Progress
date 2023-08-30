@@ -2,7 +2,7 @@ extract:
     ResourceExtractor.py
         ResourceProducer.py
         EnveloppedResourceFile.py
-            ResourceFactory.py
+            ResourceFactory.py ---------------------> ok
                 ResourceContainer.py
-                MetaData.py ===> ok
+                MetaData.py --------------------> ok
 
