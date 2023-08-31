@@ -12,6 +12,8 @@
       <list>
         <option value="$MODULE_DIR$/extract" />
         <option value="$MODULE_DIR$/resource" />
+        <option value="$MODULE_DIR$/utils" />
+        <option value="$MODULE_DIR$/streamcontext" />
       </list>
     </option>
   </component>

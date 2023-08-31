@@ -12,9 +12,10 @@ def dump_short(output_stream, input_stream):
             break
         byte_count += len(chunk)
 
-    output_stream.write(f"Resource Was: {byte_count} Long\n")
+    output_stream.write(f"\nResource Was: {byte_count} Long\n")
 
 
 with open("./experimental/my_dict.json", "rb") as inp, open("./experimental/stream.txt", "w") as outp:
     dump(outp, inp)
+with open("./experimental/my_dict.json", "rb") as inp, open("./experimental/stream.txt", "a") as outp:
     dump_short(outp, inp)

@@ -1,7 +1,7 @@
 ResourceExtractor.py
     ResourceProducer.py
-    EnveloppedResourceFile.py
-        ResourceFactory.py ---------------------> ok ### to use input and output stream, look at ./experimental/stream_tester.py
+    EnvelopedResourceFile.py
+        ResourceFactory.py ------------> ok ### to use input and output stream, look at ./experimental/stream_tester.py
             ResourceContainer.py ----------------> ok
             MetaData.py --------------------> ok
         GenericResourceProducer.py
@@ -9,6 +9,7 @@ ResourceExtractor.py
                 ResourceConstants.py ---------------> ok
                     ARCConstants.py -------------> ok
                     WARCConstants.py -------------> ok
-                AbstractResource  ------------> ok ### to use input and output stream, look at ./experimental/stream_tester.py
+                AbstractResource  -----> ok ### to use input and output stream, look at ./experimental/stream_tester.py
                     Resource.py --------------> ok
-                StreamWrappedInputStream.py
+                StreamWrappedInputStream.py ---------> ok ### look at the example at the end of this file
+                    PushBackOneByteInputStream.py ---------> ok
