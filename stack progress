@@ -3,5 +3,4 @@ ResourceExtractor
     ==> EnvelopedResourceFile
             ===> GenericResourceProducer
                     ===> GenericStreamResource
-                            ===> StreamWrappedInputStream
 

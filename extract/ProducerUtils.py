@@ -1,4 +1,4 @@
-from ..resource import ResourceProducer
+from ..my_resource import ResourceProducer
 
 
 class ProducerUtils:

@@ -4,8 +4,8 @@ ResourceExtractor.py
         ResourceFactory.py ------------> ok ### to use input and output stream, look at ./experimental/stream_tester.py
             ResourceContainer.py ----------------> ok
             MetaData.py --------------------> ok
-        GenericResourceProducer.py
-            GenericStreamResource.py
+        GenericResourceProducer.py ------------> ok
+            GenericStreamResource.py -------------> ok
                 ResourceConstants.py ---------------> ok
                     ARCConstants.py -------------> ok
                     WARCConstants.py -------------> ok

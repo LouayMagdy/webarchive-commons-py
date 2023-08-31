@@ -1,4 +1,4 @@
-
+import os
 def dump(output_stream, input_stream):
     output_stream.write(input_stream.read().decode())
 
@@ -19,3 +19,5 @@ with open("./experimental/my_dict.json", "rb") as inp, open("./experimental/stre
     dump(outp, inp)
 with open("./experimental/my_dict.json", "rb") as inp, open("./experimental/stream.txt", "a") as outp:
     dump_short(outp, inp)
+with open("./experimental/my_dict.json", "rb") as f_i:
+    print(os.fstat(f_i.fileno()).st_size)
