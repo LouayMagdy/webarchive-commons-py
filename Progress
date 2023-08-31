@@ -1,7 +1,7 @@
 ResourceExtractor.py
     ResourceProducer.py
     EnveloppedResourceFile.py
-        ResourceFactory.py ---------------------> ok ######## but still needs to use input-stream
+        ResourceFactory.py ---------------------> ok ### to use input and output stream, look at ./experimental/stream_tester.py
             ResourceContainer.py ----------------> ok
             MetaData.py --------------------> ok
         GenericResourceProducer.py
@@ -9,6 +9,6 @@ ResourceExtractor.py
                 ResourceConstants.py ---------------> ok
                     ARCConstants.py -------------> ok
                     WARCConstants.py -------------> ok
-                AbstractResource  ------------> ok ######## I replaced output-stream with a file path.... still need input-stream
+                AbstractResource  ------------> ok ### to use input and output stream, look at ./experimental/stream_tester.py
                     Resource.py --------------> ok
                 StreamWrappedInputStream.py

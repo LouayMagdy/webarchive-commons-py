@@ -1,0 +1,20 @@
+
+def dump(output_stream, input_stream):
+    output_stream.write(input_stream.read().decode())
+
+
+def dump_short(output_stream, input_stream):
+    byte_count = 0
+    chunk_size = 4096
+    while True:
+        chunk = input_stream.read(chunk_size)
+        if not chunk:
+            break
+        byte_count += len(chunk)
+
+    output_stream.write(f"Resource Was: {byte_count} Long\n")
+
+
+with open("./experimental/my_dict.json", "rb") as inp, open("./experimental/stream.txt", "w") as outp:
+    dump(outp, inp)
+    dump_short(outp, inp)

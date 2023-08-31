@@ -1,5 +1,4 @@
 from Resource import Resource
-import json
 
 
 class AbstractResource(Resource):
@@ -16,23 +15,29 @@ class AbstractResource(Resource):
     def get_meta_data(self):
         return self._metadata
 
-    def dump(self, file_path, resource):
+    def dump(self, out, resource):
         m = resource.get_meta_data()
-        with open(file_path, 'a') as f:
-            f.write("Headers Before\n")
-            f.write(json.dumps(m))
-            f.write("\nResource Follows:\n===================\n")
-            f.write(resource.get_input_stream().read())
-            f.write("\n[\n]Headers After\n")
-            f.write(json.dumps(m))
-            f.write("\n")
+        out.write("Headers Before\n")
+        out.write(str(m) + "\n")
 
-    def dump_short(self, file_path, resource) -> None:
+        out.write("Resource Follows:\n===================\n")
+        out.write(resource.get_input_stream().read().decode())
+
+        out.write("[\n]Headers After\n")
+        out.write(str(m) + "\n")
+
+    def dump_short(self, out, resource):
         m = resource.get_meta_data()
-        m_bytes = resource.get("input_stream").read()
-        with open(file_path, 'a') as f:
-            f.write(f"Resource Was: {len(m_bytes)} Long\n")
-            f.write("[\n]Headers After\n")
-            f.write(json.dumps(m))
-            f.write("\n")
+        byte_count = 0
+        chunk_size = 4096
+        while True:
+            chunk = resource.get_input_stream().read(chunk_size)
+            if not chunk:
+                break
+            byte_count += len(chunk)
+        out.write(f"Resource Was: {byte_count} Long\n")
+
+        out.write("[\n]Headers After\n")
+        out.write(str(m) + "\n")
+
 

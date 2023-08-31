@@ -77,6 +77,7 @@ class MetaData(dict):
 # metadata.put("first", 1)
 # metadata.put("second", "ok")
 # metadata.put("third", True)
+# print(str(metadata))
 # print(metadata.get("first"), metadata.get("second"), metadata.get("third"))
 # child1 = metadata.create_child("c1")
 # child2 = metadata.create_child("c2")
