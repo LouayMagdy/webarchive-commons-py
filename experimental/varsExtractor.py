@@ -8,9 +8,10 @@ attrs = constants.split(";\n")
 for attr in attrs:
     if attr == "":
         continue
-    temp = re.sub(r'"', "", re.sub(r'\s+', " ", attr)).strip().split(" ")
-    print(f"{temp}")
-    attr = re.sub(r'"', "", re.sub(r'\s+', " ", attr)).strip().split(" ")[-3:]
+    temp = re.sub(r'false', 'False', re.sub(r'null', 'None', re.sub(r'"', "", re.sub(r'\s+', " ", attr)))).strip().split(" ")
+    # print(f"{temp} - {count + 1}")
+    attr = re.sub(r'false', 'False', re.sub(r'null', 'None', re.sub(r'"', "", re.sub(r'\s+', " ", attr)))).strip().split(" ")[-3:]
+    print(f"{attr} - {count + 1}")
     if len(attr) < 3 or attr[1] != "=":
         continue
     count += 1
