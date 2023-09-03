@@ -13,3 +13,4 @@ ResourceExtractor.py
                     Resource.py --------------> ok
                 StreamWrappedInputStream.py ---------> ok ### look at the example at the end of this file
                     PushBackOneByteInputStream.py ---------> ok
+        TransformingResourceProducer.py ----------> ok
