@@ -1,6 +1,0 @@
-ResourceExtractor
-==> ProducerUtils
-    ==> EnvelopedResourceFile
-            ===> GenericResourceProducer
-                    ===> GenericStreamResource
-
