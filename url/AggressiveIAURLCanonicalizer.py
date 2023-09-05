@@ -2,8 +2,8 @@ import URLCanonicalizer, BasicURLCanonicalizer, IAURLCanonicalizer, AggressiveIA
 
 class AggressiveIAURLCanonicalizer:
     def __init__(self):
-        self.basic = BasicURLCanonicalizer()
-        self.ia = IAURLCanonicalizer(AggressiveIACanonicalizerRules())
+        self.basic = BasicURLCanonicalizer.BasicURLCanonicalizer()
+        self.ia = IAURLCanonicalizer(AggressiveIACanonicalizerRules.AggressiveIACanonicalizerRules())
 
 
     def canonicalize(self, url: HandyURL):

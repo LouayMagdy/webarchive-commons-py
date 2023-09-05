@@ -28,6 +28,8 @@ class BasicURLCanonicalizer:
     def __init__(self):
         self.OCTAL_IP = re.compile(r'^(0[0-7]*)(\\.[0-7]+)?(\\.[0-7]+)?(\\.[0-7]+)?$')
         self.DECIMAL_IP = re.compile(r'^([1-9][0-9]*)(\.[0-9]+)?(\.[0-9]+)?(\.[0-9]+)?$')
+        self._UTF8 = None
+
 
     def canonicalize(self, url: HandyURL):
         url.set_hash(None)
@@ -102,6 +104,64 @@ class BasicURLCanonicalizer:
         return path
 
 
+    def attempt_IP_formats(self, host: str) -> str:
+        if host is None:
+            return None
+        if re.match("^\\d+$", host):
+            try:
+                return socket.inet_ntoa(int(host).to_bytes(4, 'big'))
+            except NumberFormatException as e:
+                pass
+        else:
+            octal_pattern = r'^[0-7]{1,3}\.[0-7]{1,3}\.[0-7]{1,3}\.[0-7]{1,3}$'
+            matches = re.findall(octal_pattern, host)
+            if re.match(octal_pattern, host):
+                parts: int = len(matches)
+                if parts > 4: # WHAT TO DO?
+                    return None # throw new URIException("Bad Host("+host+")");
+                ip = [0]*4
+                for i in range(parts):
+                    octet: int = 0
+                    try:
+                        octet = int(matches[i][(0 if i == 0 else 1):], 8) # (((This line needs LOTS of revision)))
+                    except Exception as e:
+                        return None
+                    if octet < 0 or octet > 255:
+                        return None # // throw new URIException("Bad Host("+host+")");
+                    ip[i] = octet
+                return f'{ip[0]}.{ip[1]}.{ip[2]}.{ip[3]}'
+            else:
+                decimal_pattern = r'^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$'
+                matches = re.findall(decimal_pattern, host)
+                if re.match(decimal_pattern, host):
+                    parts: int = len(matches)
+                    if parts > 4: # WHAT TO DO?
+                        return None
+                        # throw new URIException("Bad Host("+host+")")
+                    ip = [0]*4
+                    for i in range(parts):
+                        m2_group: str = matches[i]
+                        if m2_group is None:
+                            return None
+                        # // int octet =
+                        # // Integer.parseInt(m2.group(i+1).substring((i==0)?0:1));
+                        octet: int = 0
+                        try:
+                            octet = int(m2_group[0 if i == 0 else 1:])
+                        except Exception as e:
+                            return None
+                        if octet < 0 or octet > 255:
+                            return None  # // throw new URIException("Bad Host("+host+")");
+                        ip[i] = octet
+                    return f'{ip[0]}.{ip[1]}.{ip[2]}.{ip[3]}'
+        return None
+
+
+    def UTF8(self):
+        if self._UTF8 is None:
+            self._UTF8 = codecs.lookup("utf-8")
+        return self._UTF8
+
 
     def minimal_escape(self, input: str) -> str:
         return self.escape_once(self.unescape_repeatedly(input))
@@ -138,8 +198,6 @@ class BasicURLCanonicalizer:
         return ''.join(sb)
 
 
-
-
     def unescape_repeatedly(self, input: str):
         if input is None:
             return None
@@ -148,6 +206,76 @@ class BasicURLCanonicalizer:
             if un == input:
                 return input
             input = un
+
+
+    def decode(self, input: str) -> str:
+        sb = []
+        pct_utf8_seq_start: int = -1
+        bbuf = bytearray() # Byte Buffer
+        utf8decoder = None
+        i: int = 0
+        while i < len(input):
+            c = input[i]
+            h1 = self.get_hex(input[i+1])
+            h2 = self.get_hex(input[i+2])
+            if i <= len(input) - 3 and c == '%' and h1>=0 and h2>=0:
+                if len(sb) == 0: # // sb==null
+                    if i > 0:
+                        sb.append(input[0:i])
+                b: int = ((h1 << 4) + h2) & 0xff
+                if pct_utf8_seq_start < 0 and b < 0x80:
+                    sb.append(chr(b))
+                else:
+                    if pct_utf8_seq_start < 0:
+                        pct_utf8_seq_start = i
+                        if bbuf is None:
+                            bbuf = bytearray((len(input) - i) // 3)
+                    bbuf.append(b)
+                i += 3
+            else:
+                if pct_utf8_seq_start >= 0:
+                    if utf8decoder is None:
+                        utf8decoder = codecs.getdecoder("utf-8") #// instead of UTF8().newDecoder()
+                    self.append_decoded_pct_utf8(sb, bbuf, input, pct_utf8_seq_start, i, utf8decoder)
+                    pct_utf8_seq_start = -1
+                    bbuf.clear()
+                if sb is not None:
+                    sb.append(c)
+                i += 1
+        if pct_utf8_seq_start >= 0:
+            if utf8decoder is None:
+                utf8decoder = codecs.getdecoder("utf-8")
+            self.append_decoded_pct_utf8(sb, bbuf, input, pct_utf8_seq_start, i, utf8decoder)
+
+        if sb is not None:
+            return str(sb)
+        else:
+            return input
+
+
+    ############ append_decoded_pct_utf8 function needs a lot of built-in modules to be implemented here (in python) ##############
+    ############ WILL BE HANDLED LATER #############
+
+    def append_decoded_pct_utf8(self, sb: [], bbuf, input: str, seq_start: int, seq_end: int, utf8decoder):
+    #     # // assert bbuf.position() * 3 == seqEnd - seqStart;
+    #     # assert bbuf.position() * 3 == seq_end - seq_start
+    #
+    #     utf8decoder.reset()
+    #     cbuf = bytearray(bbuf.position())
+    #     bbuf.flip()
+    #
+    #     while bbuf.position() < bbuf.limit():
+    #         coder_result, _, _ = utf8decoder.decode(bbuf, cbuf, True)
+    #         sb.append(cbuf.decode())
+    #
+    #         if coder_result.is_malformed():
+    #             undecodable_pct_hex = input[seq_start + 3 * bbuf.position():
+    #                                             seq_start + 3 * bbuf.position() + 3 * len(coder_result)]
+    #             sb.append(undecodable_pct_hex)
+    #             bbuf.position(bbuf.position() + len(coder_result))
+    #
+    #         cbuf.clear()
+        pass
 
 
     def get_hex(self, b):
