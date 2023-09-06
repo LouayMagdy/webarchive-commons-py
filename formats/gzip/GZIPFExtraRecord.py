@@ -8,7 +8,10 @@ from utils.ByteOp import *
 
 
 class GZIPFExtraRecord:
-    def __init__(self, name: bytearray, value: bytearray = None, int_val=None):
+    def __init__(self, name: bytearray = None, value: bytearray = None, int_val=None):
+        if name is None:
+            # this means that all is None
+            return
         if len(name) != GZIPConstants.get("GZIP_FEXTRA_NAME_BYTES"):
             raise GZIPFormatException("FExtra name is 2 bytes")
         self._name = name
@@ -101,8 +104,9 @@ class GZIPFExtraRecord:
 # with open('./experimental/writing_short.txt', 'wb') as f_o:
 #     t.write_to(f_o)
 # with open('./experimental/writing_short.txt', "rb") as f_i:
-#     remain = t.read(f_i, max_to_read=20)
-#     print(t.get_name(), t.get_value(), remain)
+#     t1 = GZIPFExtraRecord()
+#     remain = t1.read(f_i, max_to_read=20)
+#     print(t1.get_name(), t1.get_value(), remain)
 # print(len(buff))
 # print(t.read(buffer=buff, offset=0))
 # print(t.get_name(), t.get_value())
