@@ -21,7 +21,13 @@ def dump_short(output_stream, input_stream):
 
 # with open("./experimental/my_dict.json", "rb") as inp, open("./experimental/stream.txt", "w") as outp:
 #     dump(outp, inp)
-with open("./experimental/my_dict.json", "rb") as inp, open("./experimental/stream.txt", "a") as outp:
-    dump_short(outp, inp)
+# with open("./experimental/my_dict.json", "rb") as inp, open("./experimental/stream.txt", "a") as outp:
+    # dump_short(outp, inp)
 # with open("./experimental/my_dict.json", "rb") as f_i:
 #     print(os.fstat(f_i.fileno()).st_size)
+
+with open('./experimental/writing_short.txt', 'rb') as f_i:
+    print(f_i.read(2))
+    print(f_i.read(2))
+    print(f_i.read(5))
+

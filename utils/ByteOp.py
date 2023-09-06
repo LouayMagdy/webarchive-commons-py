@@ -105,8 +105,9 @@ def write_int(int_val, output_stream=None, buffer: bytearray = None, offset=0):
 def read_n_bytes(input_stream, n: int) -> bytearray:
     buff = bytearray(n)
     left = n
+    curr_pos = input_stream.tell()
     while left:
-        input_stream.seek(n - left)
+        input_stream.seek(curr_pos + n - left)
         buff[(n - left):] = input_stream.read(left)
         if len(buff) < left:
             raise EOFError("Short read")

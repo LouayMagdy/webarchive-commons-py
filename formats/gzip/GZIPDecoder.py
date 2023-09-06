@@ -1,7 +1,9 @@
 import sys
 import os
+
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')))
 from formats.gzip.GZIPConstants import GZIPConstants
+
 
 class GZIPDecoder:
     SEARCH_EOF_AT_START = -(sys.maxsize - 1)
@@ -34,7 +36,8 @@ class GZIPDecoder:
                 return self.SEARCH_EOF_AT_START if skipped_before_eof == 0 else -1 * skipped_before_eof
 
             if look_ahead[0] != GZIPConstants.get("GZIP_MAGIC_ONE"):
-                if look_ahead[1] == GZIPConstants.get("GZIP_MAGIC_ONE") and look_ahead[2] == GZIPConstants.get("GZIP_MAGIC_TWO"):
+                if look_ahead[1] == GZIPConstants.get("GZIP_MAGIC_ONE") and look_ahead[2] == GZIPConstants.get(
+                        "GZIP_MAGIC_TWO"):
                     keep = 2
                 elif look_ahead[2] == GZIPConstants.get("GZIP_MAGIC_ONE"):
                     keep = 1

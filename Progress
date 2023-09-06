@@ -22,3 +22,5 @@ ResourceExtractor.py
                         ByteOP.py -------> ok ###read_short(Data_input) and read_int(Data_input) not implemented as it is not used
                         GZIPFormatException.py -----------> ok
                             RecoverableRecordFormatException.py ---------> ok
+                    GZIPFExtraRecords.py
+                        GZIPFExtraRecord.py ----------> ok
