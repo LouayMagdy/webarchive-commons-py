@@ -2,6 +2,7 @@ import idna
 import codecs
 import re
 import ipaddress
+import socket
 
 import URLCanonicalizer, HandyURL
 
@@ -72,7 +73,7 @@ class BasicURLCanonicalizer:
         else: #-1 gives an empty trailing element if path ends with '/':
             paths = re.split(r'/', path)
             kept_paths = []
-            first: bool = true
+            first: bool = True
             for p in paths:
                 if first:
                     first = False
@@ -83,7 +84,7 @@ class BasicURLCanonicalizer:
                 elif p == "..":
                     #pop the last path, if present:
                     if(len(kept_paths) > 0):
-                        kept_paths.pop(len(keptPaths) - 1)
+                        kept_paths.pop(len(kept_paths) - 1)
                     else:
                         #TODO: leave it? let's do for now...
                         kept_paths.append(p)
@@ -109,12 +110,16 @@ class BasicURLCanonicalizer:
             return None
         if re.match("^\\d+$", host):
             try:
-                return socket.inet_ntoa(int(host).to_bytes(4, 'big'))
-            except NumberFormatException as e:
+                # Convert the integer into an IP address string
+                host_int = int(host)
+                return socket.inet_ntoa(host_int.to_bytes(4, byteorder='big'))
+
+            except Exception as e:
                 pass
         else:
-            octal_pattern = r'^[0-7]{1,3}\.[0-7]{1,3}\.[0-7]{1,3}\.[0-7]{1,3}$'
-            matches = re.findall(octal_pattern, host)
+            octal_pattern = r'^(0[0-7]*)(\.[0-7]+)?(\.[0-7]+)?(\.[0-7]+)?$'
+            # matches = re.findall(octal_pattern, host)
+            matches = host.split('.')
             if re.match(octal_pattern, host):
                 parts: int = len(matches)
                 if parts > 4: # WHAT TO DO?
@@ -123,7 +128,8 @@ class BasicURLCanonicalizer:
                 for i in range(parts):
                     octet: int = 0
                     try:
-                        octet = int(matches[i][(0 if i == 0 else 1):], 8) # (((This line needs LOTS of revision)))
+                        # octet = int(matches[i][(0 if i == 0 else 1):], 8) # (((This line needs LOTS of revision)))
+                        octet = int(matches[i], 8)
                     except Exception as e:
                         return None
                     if octet < 0 or octet > 255:
@@ -131,8 +137,9 @@ class BasicURLCanonicalizer:
                     ip[i] = octet
                 return f'{ip[0]}.{ip[1]}.{ip[2]}.{ip[3]}'
             else:
-                decimal_pattern = r'^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$'
-                matches = re.findall(decimal_pattern, host)
+                decimal_pattern = r'^([1-9][0-9]*)(\.[0-9]+)?(\.[0-9]+)?(\.[0-9]+)?$'
+                # matches = re.findall(decimal_pattern, host)
+                matches = host.split('.')
                 if re.match(decimal_pattern, host):
                     parts: int = len(matches)
                     if parts > 4: # WHAT TO DO?
@@ -147,7 +154,8 @@ class BasicURLCanonicalizer:
                         # // Integer.parseInt(m2.group(i+1).substring((i==0)?0:1));
                         octet: int = 0
                         try:
-                            octet = int(m2_group[0 if i == 0 else 1:])
+                            # octet = int(m2_group[0 if i == 0 else 1:])
+                            octet = int(m2_group)
                         except Exception as e:
                             return None
                         if octet < 0 or octet > 255:
@@ -171,14 +179,15 @@ class BasicURLCanonicalizer:
         if input is None:
             return None
 
-        utf8bytes: bytes = input.encode('utf-8')
+        utf8bytes = input.encode('utf-8')
         sb: List[str] = []
 
         for i in range(len(utf8bytes)):
             b: int = utf8bytes[i] & 0xFF
             ok: bool = False
-            if 32 < b < 128 and b != '#':
-                ok = (b != '%')
+            if 32 < b < 128:
+                if b != '#':
+                    ok = (b != '%')
             if ok and sb is not None:
                 sb.append(chr(b))
             else:
@@ -215,10 +224,12 @@ class BasicURLCanonicalizer:
         utf8decoder = None
         i: int = 0
         while i < len(input):
+            # print("i=" + str(i) + " - input.length()=" + str(len(input)))
             c = input[i]
-            h1 = self.get_hex(input[i+1])
-            h2 = self.get_hex(input[i+2])
-            if i <= len(input) - 3 and c == '%' and h1>=0 and h2>=0:
+            h1, h2 = None, None
+            if i <= len(input) - 3 and c == '%' and self.get_hex(input[i+1])>=0 and self.get_hex(input[i+2])>=0:
+                h1 = self.get_hex(input[i + 1])
+                h2 = self.get_hex(input[i + 2])
                 if len(sb) == 0: # // sb==null
                     if i > 0:
                         sb.append(input[0:i])
@@ -248,7 +259,7 @@ class BasicURLCanonicalizer:
             self.append_decoded_pct_utf8(sb, bbuf, input, pct_utf8_seq_start, i, utf8decoder)
 
         if sb is not None:
-            return str(sb)
+            return ''.join(sb)
         else:
             return input
 
@@ -298,9 +309,60 @@ class BasicURLCanonicalizer:
 
     ################ Testing functions ################
 test = BasicURLCanonicalizer()
-print(str(test.get_hex(-1)) + "\n=====\n")
-print(str(test.get_hex(5)) + "\n=====\n")
-print(str(test.get_hex('C')) + "\n=====\n")
-print(str(test.get_hex('Z')) + "\n=====\n")
-print(str(test.get_hex('d')) + "\n=====\n")
-print(str(test.get_hex('g')) + "\n=====\n")
+# print(str(test.get_hex(-1)) + "\n=====\n")
+# print(str(test.get_hex(5)) + "\n=====\n")
+# print(str(test.get_hex('C')) + "\n=====\n")
+# print(str(test.get_hex('Z')) + "\n=====\n")
+# print(str(test.get_hex('d')) + "\n=====\n")
+# print(str(test.get_hex('g')) + "\n=====\n")
+
+
+# print(str(test.normalize_path("/a/../b/c/./d")) + "\n=====\n")
+# print(str(test.normalize_path("//my//folder///path")) + "\n=====\n")
+# print(str(test.normalize_path("/my/folder/./path")) + "\n=====\n")
+# print(str(test.normalize_path("/my/folder/../path")) + "\n=====\n")
+# print(str(test.normalize_path("")) + "\n=====\n")
+# print(str(test.normalize_path(None)) + "\n=====\n")
+
+
+##################### NOT WORKING!!!! ######################
+# print(str(test.attempt_IP_formats("192.168.0.1")) + "\n=====\n")
+# print(str(test.attempt_IP_formats("0330.0250.0000.01")) + "\n=====\n")
+# print(str(test.attempt_IP_formats("123456")) + "\n=====\n")
+# print(str(test.attempt_IP_formats("0448.0250.0000.01")) + "\n=====\n")
+# print(str(test.attempt_IP_formats("256.168.0.1")) + "\n=====\n")
+# print(str(test.attempt_IP_formats("")) + "\n=====\n")
+# print(str(test.attempt_IP_formats(None)))
+
+
+# print(test.unescape_repeatedly("Hello World!") + "\n======")
+# print(test.unescape_repeatedly("Hello & Goodbye") + "\n======")
+# print(test.unescape_repeatedly("Hello # World!") + "\n======")
+# print(test.unescape_repeatedly("Hello % World!") + "\n======")
+# print(test.unescape_repeatedly("こんにちは") + "\n======")
+# print(test.unescape_repeatedly("") + "\n======")
+# print(str(test.unescape_repeatedly(None)) + "\n======")
+# print(test.unescape_repeatedly("This is a very long input string that exceeds the typical length of a regular string") + "\n======")
+# print(test.unescape_repeatedly("# % ! @") + "\n======")
+
+# print(test.minimal_escape("Hello World!") + "\n======")
+# print(test.minimal_escape("Hello & Goodbye") + "\n======")
+# print(test.minimal_escape("Hello # World!") + "\n======")
+# print(test.minimal_escape("Hello % World!") + "\n======")
+# print(test.minimal_escape("こんにちは") + "\n======")
+# print(test.minimal_escape("") + "\n======")
+# print(str(test.minimal_escape(None)) + "\n======")
+# print(test.minimal_escape("This is a very long input string that exceeds the typical length of a regular string") + "\n======")
+# print(test.minimal_escape("# % ! @") + "\n======")
+
+
+# print(test.decode("Hello%20World!") + "\n======")
+# print(test.decode("Hello%20%3C%21%2D%2D%20World%20%2D%2D%3E") + "\n======")
+# print(test.decode("Hello World!") + "\n======")
+# print(test.decode("Hello%ZZWorld") + "\n======")
+# print(test.decode("One % sign.") + "\n======")
+# print(test.decode("H%65%6C%6C%6F %57o%72%6Cd!") + "\n======")
+# print(test.decode("Hello%ZZ%20World") + "\n======")
+
+
+
