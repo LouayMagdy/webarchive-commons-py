@@ -1,3 +1,3 @@
 import sys
-
-print(sys.getsizeof(2 ** 31 - 1))
+p = 2
+print(p.to_bytes(2, 'little'))
