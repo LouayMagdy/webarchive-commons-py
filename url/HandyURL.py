@@ -2,8 +2,10 @@ import tldextract
 
 
 class HandyURL:
+    DEFAULT_PORT = -1
+
     def __init__(self, scheme: str = None, auth_user: str = None,
-                 auth_pass: str = None, host: str = None, port: int = None,
+                 auth_pass: str = None, host: str = None, port: int = DEFAULT_PORT,
                  path: str = None, query: str = None, hashing: str = None):
         self.DEFAULT_PORT = -1
         self.scheme = scheme
@@ -72,7 +74,7 @@ class HandyURL:
             sb.append("?" + self.query)
         if self.hashing is not None:
             sb.append("#" + self.hashing)
-        return "".join(sb)
+        return ''.join(string for string in sb if string is not None)
 
     def get_path_query(self):  # not tested
         sb = ""
@@ -86,15 +88,15 @@ class HandyURL:
             sb += '?' + self.query
         return sb
 
-    def get_public_suffix(self): # not tested
+    def get_public_suffix(self):  # not tested
         if self.cached_pub_suffix is not None:
             return self.cached_pub_suffix
         if self.host is None:
             return None
-        self.cached_pub_suffix = self._host_to_public_suffix(self.host) # needs testing
+        self.cached_pub_suffix = self._host_to_public_suffix(self.host)  # needs testing
         return self.cached_pub_suffix
 
-    def get_public_prefix(self): # not tested
+    def get_public_prefix(self):  # not tested
         if self.cached_pub_prefix is not None:
             return self.cached_pub_prefix
         if self.host is None:
@@ -172,12 +174,10 @@ class HandyURL:
             self.port, self.path, self.query, self.hashing
         )
 
-
     ############# Function not implemented, as it is unused by any other part, and it requires much time! #############
     # public URL toURL() throws MalformedURLException {
     #     return new URL(getURLString());
     # }
-
 
 ################# Testing ################
 
@@ -254,8 +254,3 @@ class HandyURL:
 # debugString = handyURL.to_debug_string()
 # print(f"debugString = {debugString}\n======")
 # # Assert that debugString is equal to "Scheme(ftp) UserName(user) UserPass(pass) Host(example.com) port(21) Path(/path) Query(query) Frag(hash)"
-
-
-
-
-

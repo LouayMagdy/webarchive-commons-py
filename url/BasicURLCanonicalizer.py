@@ -4,8 +4,8 @@ import re
 import ipaddress
 import socket
 
-import URLCanonicalizer, HandyURL
-
+import URLCanonicalizer
+from HandyURL import HandyURL
 
 '''
  Canonicalizer that does more or less basic fixup. Based initially on rules
@@ -25,12 +25,12 @@ import URLCanonicalizer, HandyURL
  BasicURLCanonicalizer expresses non-ascii characters pct-encoded UTF-8.
 '''
 
+
 class BasicURLCanonicalizer:
     def __init__(self):
         self.OCTAL_IP = re.compile(r'^(0[0-7]*)(\\.[0-7]+)?(\\.[0-7]+)?(\\.[0-7]+)?$')
         self.DECIMAL_IP = re.compile(r'^([1-9][0-9]*)(\.[0-9]+)?(\.[0-9]+)?(\.[0-9]+)?$')
         self._UTF8 = None
-
 
     def canonicalize(self, url: HandyURL):
         url.set_hash(None)
@@ -44,7 +44,7 @@ class BasicURLCanonicalizer:
         if hostE is not None:
             try:
                 host = idna.encode(hostE).decode('utf-8')
-            except IllegalArgumentException as e:
+            except Exception as e:
                 if "A prohibited code point was found" not in str(e):
                     # TODO!
                     pass
@@ -55,8 +55,8 @@ class BasicURLCanonicalizer:
             host = re.sub(r'\.$', '', host)
 
         ip: str = None
-        ip = self.attemptIPFormats(host)
-        if ip is None:
+        ip = self.attempt_IP_formats(host)
+        if ip is not None:
             host = ip
         elif host is not None:
             host = self.escape_once(host.lower())
@@ -65,12 +65,10 @@ class BasicURLCanonicalizer:
         path: str = self.unescape_repeatedly(url.get_path())
         url.set_path(self.escape_once(self.normalize_path(path)))
 
-
-
     def normalize_path(self, path: str) -> str:
         if path is None:
             path = "/"
-        else: #-1 gives an empty trailing element if path ends with '/':
+        else:  # -1 gives an empty trailing element if path ends with '/':
             paths = re.split(r'/', path)
             kept_paths = []
             first: bool = True
@@ -79,31 +77,30 @@ class BasicURLCanonicalizer:
                     first = False
                     continue
                 elif p == ".":
-                    #skip
+                    # skip
                     continue
                 elif p == "..":
-                    #pop the last path, if present:
-                    if(len(kept_paths) > 0):
+                    # pop the last path, if present:
+                    if (len(kept_paths) > 0):
                         kept_paths.pop(len(kept_paths) - 1)
                     else:
-                        #TODO: leave it? let's do for now...
+                        # TODO: leave it? let's do for now...
                         kept_paths.append(p)
                 else:
                     kept_paths.append(p)
             num_kept: int = len(kept_paths)
-            if(num_kept == 0):
+            if (num_kept == 0):
                 path = '/'
             else:
                 sb = ['/']
                 for i in range(num_kept - 1):
                     p: str = kept_paths[i]
                     if len(p) > 0:
-                        #this will omit multiple slashes:
+                        # this will omit multiple slashes:
                         sb.append(p + '/')
                 sb.append(kept_paths[num_kept - 1])
                 path = ''.join(sb)
         return path
-
 
     def attempt_IP_formats(self, host: str) -> str:
         if host is None:
@@ -122,9 +119,9 @@ class BasicURLCanonicalizer:
             matches = host.split('.')
             if re.match(octal_pattern, host):
                 parts: int = len(matches)
-                if parts > 4: # WHAT TO DO?
-                    return None # throw new URIException("Bad Host("+host+")");
-                ip = [0]*4
+                if parts > 4:  # WHAT TO DO?
+                    return None  # throw new URIException("Bad Host("+host+")");
+                ip = [0] * 4
                 for i in range(parts):
                     octet: int = 0
                     try:
@@ -133,7 +130,7 @@ class BasicURLCanonicalizer:
                     except Exception as e:
                         return None
                     if octet < 0 or octet > 255:
-                        return None # // throw new URIException("Bad Host("+host+")");
+                        return None  # // throw new URIException("Bad Host("+host+")");
                     ip[i] = octet
                 return f'{ip[0]}.{ip[1]}.{ip[2]}.{ip[3]}'
             else:
@@ -142,10 +139,10 @@ class BasicURLCanonicalizer:
                 matches = host.split('.')
                 if re.match(decimal_pattern, host):
                     parts: int = len(matches)
-                    if parts > 4: # WHAT TO DO?
+                    if parts > 4:  # WHAT TO DO?
                         return None
                         # throw new URIException("Bad Host("+host+")")
-                    ip = [0]*4
+                    ip = [0] * 4
                     for i in range(parts):
                         m2_group: str = matches[i]
                         if m2_group is None:
@@ -164,23 +161,20 @@ class BasicURLCanonicalizer:
                     return f'{ip[0]}.{ip[1]}.{ip[2]}.{ip[3]}'
         return None
 
-
     def UTF8(self):
         if self._UTF8 is None:
             self._UTF8 = codecs.lookup("utf-8")
         return self._UTF8
 
-
     def minimal_escape(self, input: str) -> str:
         return self.escape_once(self.unescape_repeatedly(input))
-
 
     def escape_once(self, input: str) -> str:
         if input is None:
             return None
 
         utf8bytes = input.encode('utf-8')
-        sb: List[str] = []
+        sb: list[str] = []
 
         for i in range(len(utf8bytes)):
             b: int = utf8bytes[i] & 0xFF
@@ -206,7 +200,6 @@ class BasicURLCanonicalizer:
 
         return ''.join(sb)
 
-
     def unescape_repeatedly(self, input: str):
         if input is None:
             return None
@@ -216,21 +209,20 @@ class BasicURLCanonicalizer:
                 return input
             input = un
 
-
     def decode(self, input: str) -> str:
         sb = []
         pct_utf8_seq_start: int = -1
-        bbuf = bytearray() # Byte Buffer
+        bbuf = bytearray()  # Byte Buffer
         utf8decoder = None
         i: int = 0
         while i < len(input):
             # print("i=" + str(i) + " - input.length()=" + str(len(input)))
             c = input[i]
             h1, h2 = None, None
-            if i <= len(input) - 3 and c == '%' and self.get_hex(input[i+1])>=0 and self.get_hex(input[i+2])>=0:
+            if i <= len(input) - 3 and c == '%' and self.get_hex(input[i + 1]) >= 0 and self.get_hex(input[i + 2]) >= 0:
                 h1 = self.get_hex(input[i + 1])
                 h2 = self.get_hex(input[i + 2])
-                if len(sb) == 0: # // sb==null
+                if len(sb) == 0:  # // sb==null
                     if i > 0:
                         sb.append(input[0:i])
                 b: int = ((h1 << 4) + h2) & 0xff
@@ -246,7 +238,7 @@ class BasicURLCanonicalizer:
             else:
                 if pct_utf8_seq_start >= 0:
                     if utf8decoder is None:
-                        utf8decoder = codecs.getdecoder("utf-8") #// instead of UTF8().newDecoder()
+                        utf8decoder = codecs.getdecoder("utf-8")  # // instead of UTF8().newDecoder()
                     self.append_decoded_pct_utf8(sb, bbuf, input, pct_utf8_seq_start, i, utf8decoder)
                     pct_utf8_seq_start = -1
                     bbuf.clear()
@@ -263,31 +255,29 @@ class BasicURLCanonicalizer:
         else:
             return input
 
-
     ############ append_decoded_pct_utf8 function needs a lot of built-in modules to be implemented here (in python) ##############
     ############ WILL BE HANDLED LATER #############
 
     def append_decoded_pct_utf8(self, sb: [], bbuf, input: str, seq_start: int, seq_end: int, utf8decoder):
-    #     # // assert bbuf.position() * 3 == seqEnd - seqStart;
-    #     # assert bbuf.position() * 3 == seq_end - seq_start
-    #
-    #     utf8decoder.reset()
-    #     cbuf = bytearray(bbuf.position())
-    #     bbuf.flip()
-    #
-    #     while bbuf.position() < bbuf.limit():
-    #         coder_result, _, _ = utf8decoder.decode(bbuf, cbuf, True)
-    #         sb.append(cbuf.decode())
-    #
-    #         if coder_result.is_malformed():
-    #             undecodable_pct_hex = input[seq_start + 3 * bbuf.position():
-    #                                             seq_start + 3 * bbuf.position() + 3 * len(coder_result)]
-    #             sb.append(undecodable_pct_hex)
-    #             bbuf.position(bbuf.position() + len(coder_result))
-    #
-    #         cbuf.clear()
+        #     # // assert bbuf.position() * 3 == seqEnd - seqStart;
+        #     # assert bbuf.position() * 3 == seq_end - seq_start
+        #
+        #     utf8decoder.reset()
+        #     cbuf = bytearray(bbuf.position())
+        #     bbuf.flip()
+        #
+        #     while bbuf.position() < bbuf.limit():
+        #         coder_result, _, _ = utf8decoder.decode(bbuf, cbuf, True)
+        #         sb.append(cbuf.decode())
+        #
+        #         if coder_result.is_malformed():
+        #             undecodable_pct_hex = input[seq_start + 3 * bbuf.position():
+        #                                             seq_start + 3 * bbuf.position() + 3 * len(coder_result)]
+        #             sb.append(undecodable_pct_hex)
+        #             bbuf.position(bbuf.position() + len(coder_result))
+        #
+        #         cbuf.clear()
         pass
-
 
     def get_hex(self, b):
         if type(b) is str:
@@ -306,8 +296,9 @@ class BasicURLCanonicalizer:
             return 10 + (b - ord('a'))
         return -1
 
-
     ################ Testing functions ################
+
+
 test = BasicURLCanonicalizer()
 # print(str(test.get_hex(-1)) + "\n=====\n")
 # print(str(test.get_hex(5)) + "\n=====\n")
@@ -363,6 +354,23 @@ test = BasicURLCanonicalizer()
 # print(test.decode("One % sign.") + "\n======")
 # print(test.decode("H%65%6C%6C%6F %57o%72%6Cd!") + "\n======")
 # print(test.decode("Hello%ZZ%20World") + "\n======")
+
+handy_test = HandyURL("http", "user", "pass", "www.example.com", 8080, "/path", "param=value", "fragment")
+print(handy_test.get_url_string())
+test.canonicalize(handy_test)
+print(handy_test.get_url_string())
+
+print("================")
+
+handy_test = HandyURL()
+handy_test.set_scheme("http")
+handy_test.set_host("www.example.com")
+print(handy_test.get_url_string())
+test.canonicalize(handy_test)
+print(handy_test.get_url_string())
+
+print("================")
+
 
 
 
