@@ -9,27 +9,27 @@ from utils.ByteOp import *
 
 class GZIPFExtraRecords:
     def __init__(self, input_stream=None):
-        self._records = []
+        self.records = []
         if input_stream is not None:
             self.read_records(input_stream)
 
     def write_to(self, output_stream):
         over_all_len = 0
-        for record in self._records:
+        for record in self.records:
             over_all_len += record.length()
         write_short(short_val=over_all_len, output_stream=output_stream)
-        for record in self._records:
+        for record in self.records:
             record.write_to(output_stream=output_stream)
 
     def get_byte_length(self) -> int:
         length = 2
         # the length of all records is written in 2 bytes
-        for record in self._records:
+        for record in self.records:
             length += record.length()
         return length
 
     def read_records(self, input_stream):
-        self._records = []
+        self.records = []
         remaining_bytes = -1
         remaining_bytes = read_short(input_stream=input_stream)
         if remaining_bytes < 0:
@@ -45,7 +45,24 @@ class GZIPFExtraRecords:
                 remaining_bytes -= ex.bytes_read
             if remaining_bytes < 0:
                 raise GZIPFormatException("Invalid FExtra length/records")
-        self._records = tmp_list
+        self.records = tmp_list
+
+    "----> the next methods are list methods to deal with this class"
+
+    def add(self, record: GZIPFExtraRecord):
+        self.records.append(record)
+
+    def remove(self, record: GZIPFExtraRecord):
+        self.records.remove(record)
+
+    def get(self, index: int) -> GZIPFExtraRecord:
+        return self.records[index]
+
+    def is_empty(self) -> bool:
+        return len(self.records) == 0
+
+    def size(self) -> int:
+        return len(self.records)
 
 # t1 = GZIPFExtraRecord(name=bytearray([23, 34]), value=bytearray([12, 56, 39]))
 # t2 = GZIPFExtraRecord(name=bytearray([13, 84]), value=bytearray([10, 97, 65, 93]))
@@ -61,7 +78,7 @@ class GZIPFExtraRecords:
 # records = None
 # with open("./experimental/writing_short.txt", 'rb') as f_i:
 #     records = GZIPFExtraRecords(input_stream=f_i)
-#     for record in records._records:
+#     for record in records.records:
 #         print(record.get_name(), record.get_value())
 #     print(records.get_byte_length())
 # with open("./experimental/writing_short.txt", 'wb') as f_o:

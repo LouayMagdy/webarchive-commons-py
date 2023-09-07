@@ -24,3 +24,5 @@ ResourceExtractor.py
                             RecoverableRecordFormatException.py ---------> ok
                     GZIPFExtraRecords.py ---------> ok
                         GZIPFExtraRecord.py ----------> ok
+                    CRCOutputStream.py
+                        CRC32.py --------> ok
