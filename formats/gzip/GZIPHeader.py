@@ -1,11 +1,13 @@
 import sys
 import os
+
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')))
 from formats.gzip.GZIPConstants import GZIPConstants
 from formats.gzip.GZIPStaticHeader import GZIPStaticHeader
 from formats.gzip.GZIPFExtraRecords import GZIPFExtraRecords
 from formats.gzip.GZIPFExtraRecord import GZIPFExtraRecord
 from utils.ByteOp import *
+from utils.io.CRCOutputStream import CRCOutputStream
 
 
 class GZIPHeader:
@@ -82,18 +84,18 @@ class GZIPHeader:
         if removed > 0:
             self.crc = -1
 
-    def add_record(self, name:bytearray, value:bytearray=None, int_val:int=None):
+    def add_record(self, name: bytearray, value: bytearray = None, int_val: int = None):
         if self.gzip_records is None:
             self.gzip_records = GZIPFExtraRecords()
         if value is None:
-            self.gzip_records.append(GZIPFExtraRecord(name=name, int_val=int_val))
+            self.gzip_records.add(GZIPFExtraRecord(name=name, int_val=int_val))
         else:
-            self.gzip_records.append(GZIPFExtraRecord(name=name, value=int_val))
+            self.gzip_records.add(GZIPFExtraRecord(name=name, value=value))
         self.static_header.set_fextra_flag(True)
         self.crc = -1
 
-    def get_record(self, index: int):
-        if self.gzip_records is None or self.gzip_records.is_empty():
+    def get_record(self, index: int) -> GZIPFExtraRecord:
+        if self.gzip_records is None or self.gzip_records.is_empty() or index >= self.get_record_count():
             raise IndexError("Index out of bound exception")
         return self.gzip_records.get(index)
 
@@ -124,4 +126,29 @@ class GZIPHeader:
     def write_bytes(self, output_stream):
         orig_output_stream = output_stream
         if self.static_header.is_fhcrc_set() and self.crc == -1:
-            # CRC outputstream heree
+            output_stream = CRCOutputStream(orig_output_stream)
+        self.static_header.write_to(output_stream=output_stream)
+        if self.static_header.is_fextra_set():
+            self.gzip_records.write_to(output_stream=output_stream)
+        if self.static_header.is_fname_set():
+            output_stream.write_byte_arr(self.filename)
+        if self.static_header.is_fcomment_set():
+            output_stream.write_byte_arr(self.comment)
+        if self.static_header.is_fhcrc_set():
+            if self.crc == -1:
+                self.crc = output_stream.get_crc_value()
+            write_short(short_val=self.crc, output_stream=orig_output_stream)
+
+    @staticmethod
+    def is_valid_compression_method(cm: int) -> bool:
+        return cm == GZIPConstants.get("GZIP_COMPRESSION_METHOD_DEFLATE")
+
+# gzsh = GZIPStaticHeader() gzh = GZIPHeader(gzip_static_header=gzsh) gzh.set_file_name(bytearray("Louay",
+# 'utf-8')) print(gzh.get_file_name(), gzh.get_file_name_length()) gzh.set_file_comment(bytearray("this is the 1st
+# trial", 'utf-8')) print(gzh.get_comment(), gzh.get_comment_length()) gzh.add_record(name=bytearray('f1', 'utf-8'),
+# int_val=456) gzh.add_record(name=bytearray('f2', 'utf-8'), value=bytearray([14, 23, 69, 64, 58])) gzh.add_record(
+# name=bytearray('f1', 'utf-8'), value=bytearray([14, 64, 58])) print(gzh.get_int_record_by_name(bytearray('f1',
+# 'utf-8'))) print(gzh.get_int_record_by_name(bytearray('f2', 'utf-8')), bytes_to_int(byte_arr=bytearray([14, 23, 69,
+# 64, 58]), offset=0)) print(f"count:{gzh.get_record_count()}") gzh.replace_record(name=bytearray('f1', 'utf-8'),
+# value=bytearray([12, 13])) print(gzh.get_record_count()) print(gzh.get_record_by_name(bytearray('f1',
+# 'utf-8')).get_value())
