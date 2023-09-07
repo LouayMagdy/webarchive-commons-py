@@ -12,7 +12,7 @@ class CRCOutputStream:
         self.auto_flush = auto_flush
         self.bytes_written = 0
 
-    def write_byte(self, b):
+    def write_byte(self, b: int):
         ls_byte = b & 0xFF
         self._crc_32.update(num=ls_byte)
         self.output_stream.write(bytearray([ls_byte]))
