@@ -7,5 +7,5 @@ class PushBackOneByteInputStream:
         pass
 
     @abstractmethod
-    def read(self):
+    def read(self) -> int:
         pass

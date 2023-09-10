@@ -27,7 +27,7 @@ class GZIPDecoder:
     def is_aligned_at_eof(self, skipped):
         return skipped == self.SEARCH_EOF_AT_START
 
-    def align_on_magic3(self, input_stream):
+    def align_on_magic3(self, input_stream) -> int:
         """
         Read bytes from InputStream argument until 3 bytes are found that appear to be the start of a GZIPHeader.
         leave the stream on the 4th byte, and return the number of bytes skipped before finding the 3 bytes.
@@ -85,8 +85,12 @@ class GZIPDecoder:
             crc_input_stream = CRCInputStream(orig_input_stream)
             static_header = GZIPStaticHeader(crc_input_stream)
         header = GZIPHeader(static_header)
+        # static_header.set_fextra_flag(True)
+        # print("extra is set??", static_header.is_fextra_set())
         if static_header.is_fextra_set():
             header.gzip_records = GZIPFExtraRecords(input_stream=crc_input_stream)
+        # static_header.set_fname_flag(True)
+        # print("name is set??", static_header.is_fname_set())
         if static_header.is_fname_set():
             if self._max_name_size > 0:
                 header.filename = read_to_null(input_stream=crc_input_stream, max_size=self._max_name_size)
@@ -94,6 +98,9 @@ class GZIPDecoder:
             else:
                 header.filename = None
                 header.filename_length = discard_to_null(crc_input_stream)
+        # print(f"name is {header.get_file_name()} with length = {header.get_file_name_length()}")
+        # static_header.set_fcomment_flag(True)
+        # print("comment is set??", static_header.is_fcomment_set())
         if static_header.is_fcomment_set():
             if self._max_comment_size > 0:
                 header.comment = read_to_null(input_stream=crc_input_stream, max_size=self._max_comment_size)
@@ -101,9 +108,12 @@ class GZIPDecoder:
             else:
                 header.comment = None
                 header.comment_length = discard_to_null(crc_input_stream)
+        # print(f"comment is {header.get_comment()} with length = {header.get_comment_length()}")
+        # static_header.set_fhcrc_flag(True)
         if static_header.is_fhcrc_set():
             header.crc = read_short(input_stream=crc_input_stream)
             want_crc16 = crc_input_stream.get_crc_value() & 0xFFFF
+            print(header.crc, want_crc16)
             if want_crc16 != header.crc:
                 raise GZIPFormatException("HEADER CRC ERROR")
         return header

@@ -11,7 +11,7 @@ ResourceExtractor.py
                     WARCConstants.py -------------> ok
                 AbstractResource  -----> ok ### to use input and output stream, look at ./experimental/stream_tester.py
                     Resource.py --------------> ok
-                StreamWrappedInputStream.py ---------> ok ### look at the example at the end of this file
+                StreamWrappedInputStream.py ---------> ok ### look at the example at the end of this file + offset !!
                     PushBackOneByteInputStream.py ---------> ok
         TransformingResourceProducer.py ----------> ok
         GZIPMemberSeries.py
@@ -19,7 +19,7 @@ ResourceExtractor.py
             GZIPDecoder.py  ------------> ok     #### take care of the input stream
                 GZIPHeader.py ---------> ok
                     GZIPStaticHeader.py ---------> ok
-                        ByteOP.py -------> ok ###read_short(Data_input) and read_int(Data_input) not implemented as it is not used
+                        ByteOP.py -------> ok ###read_short(Data_input) and read_int(Data_input) not implemented as it is not used -- you may need to edit some functions to be compatible with the input streams
                         GZIPFormatException.py -----------> ok
                             RecoverableRecordFormatException.py ---------> ok
                     GZIPFExtraRecords.py ---------> ok

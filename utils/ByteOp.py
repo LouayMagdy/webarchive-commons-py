@@ -43,12 +43,11 @@ def bytes_to_short(b1: int = None, b2: int = None, byte_arr: bytearray = None, o
 
 
 def read_short(input_stream):
-    b1 = bytearray(input_stream.read(1))
+    b1 = bytearray(input_stream.read())
     if b1 == b'':
         raise EOFError("No bytes expected short(2)")
     b1 = b1[0] & 0xff
-
-    b2 = bytearray(input_stream.read(1))
+    b2 = bytearray(input_stream.read())
     if b2 == b'':
         raise EOFError("No bytes expected short(2)")
     b2 = b2[0] & 0xff
@@ -108,7 +107,7 @@ def read_n_bytes(input_stream, n: int) -> bytearray:
     curr_pos = input_stream.tell()
     while left:
         input_stream.seek(curr_pos + n - left)
-        buff[(n - left):] = input_stream.read(left)
+        buff[(n - left):] = input_stream.read(length=left)
         if len(buff) < left:
             raise EOFError("Short read")
         left -= len(buff)
@@ -118,7 +117,7 @@ def read_n_bytes(input_stream, n: int) -> bytearray:
 def read_to_null(input_stream, max_size=MAX_READ_SIZE) -> bytearray:
     byte_arr = bytearray(max_size)
     for i in range(max_size):
-        b = bytearray(input_stream.read(1))[0] & 0xff
+        b = bytearray(input_stream.read())[0] & 0xff
         byte_arr[i] = b
         if not b:
             return copy(byte_arr, 0, i + 1)
@@ -130,10 +129,10 @@ def read_to_null(input_stream, max_size=MAX_READ_SIZE) -> bytearray:
 def discard_to_null(input_stream) -> int:
     i = 0
     while 1:
-        b = bytearray(input_stream.read(1))[0] & 0xff
+        b = bytearray(input_stream.read())[0] & 0xff
+        i += 1
         if not b:
             return i
-        i += 1
         if i == os.fstat(input_stream.fileno()).st_size:
             raise EOFError("No NULL before EOF")
 

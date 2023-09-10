@@ -47,7 +47,7 @@ class StreamWrappedInputStream(PushBackOneByteInputStream):
             self.mark_pos = self._un_marked
             self._read_limit = self._un_marked
 
-    def read(self, byte_arr=None, offset=None, length=None):
+    def read(self, byte_arr=None, offset=None, length=None) -> int:
         if offset is None:
             offset = 0
         if length is None and byte_arr is not None:
@@ -55,13 +55,18 @@ class StreamWrappedInputStream(PushBackOneByteInputStream):
         if byte_arr is None:
             length = 1
             byte_arr = bytearray(1)
+        if len(byte_arr) - offset < length:
+            raise IndexError("Index out of bound error")
         if self.mark_pos != self._un_marked:
             self._read_limit -= length
             if self._read_limit <= 0:
                 self.mark_pos = self._un_marked
-        self.stream.seek(offset)
-        byte_arr[:] = bytearray(self.stream.read(length))
-        return byte_arr[0] & 0xff if length == len(byte_arr) == 1 else None
+        # self.stream.seek(offset)
+        byte_arr[offset:] = bytearray(self.stream.read(length))
+        if length == len(byte_arr) == 1:
+            return byte_arr[0] & 0xff
+        length = len(byte_arr) - offset
+        return length if length > 0 else -1
 
     def skip(self, n_bytes):
         if n_bytes < 1:
@@ -81,14 +86,14 @@ class StreamWrappedInputStream(PushBackOneByteInputStream):
 #         buff = f_i.read().decode()
 #         print(buff)
 #         f_o.write(buff)
-#
+# #
 # with open("./experimental/my_dict.json", "rb") as f_i:
 #     swis2 = StreamWrappedInputStream(f_i)
 #     with open("stream.txt", "wb") as f_o:
-#         buff = bytearray(10) # for the next to lines only
-# #         # swis2.read(buff, 200, 10)
-#         swis2.read(buff)
-# #         buff = swis2.read()
+#         buff = bytearray(10) # for the next two lines only
+#         # swis2.read(buff, 2, 8)
+#         # swis2.read(buff)
+#         buff = swis2.read()
 #         print(buff)
 #         # f_o.write(buff)
 
@@ -100,6 +105,6 @@ class StreamWrappedInputStream(PushBackOneByteInputStream):
 #     swis3.reset()
 #     swis3.mark(7)
 #     buff = bytearray(7)
-#     swis3.read(buff, 7)
+#     swis3.read(buff, length=7)
 #     print(f"{buff} --- forget after {swis3._read_limit} -- {swis3._un_marked}")
-#     swis3.reset()
+#     # swis3.reset()
