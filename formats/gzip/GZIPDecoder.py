@@ -28,6 +28,14 @@ class GZIPDecoder:
         return skipped == self.SEARCH_EOF_AT_START
 
     def align_on_magic3(self, input_stream):
+        """
+        Read bytes from InputStream argument until 3 bytes are found that appear to be the start of a GZIPHeader.
+        leave the stream on the 4th byte, and return the number of bytes skipped before finding the 3 bytes.
+        :param input_stream: the input stream to read from
+        :return: number of bytes skipped before finding the gzip magic: 0 if the first 3 bytes matched.
+        If no magic was found before an EOF, returns -1 * the number of bytes skipped before hitting the EOF.
+        As a special case, if the stream was at EOF when the method is called, returns SEARCH_EOF_AT_START.
+        """
         bytes_skipped = 0
         look_ahead = bytearray(3)
         keep = 0
