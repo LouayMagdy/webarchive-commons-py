@@ -1,15 +1,45 @@
 import re
 import os
-import string
-from collections import namedtuple
 from HandyURL import HandyURL
-from .CanonicalizerConstants import CanonicalizerConstants as consts
-from .URLCanonicalizer import URLCanonicalizer as urlcan
+from CanonicalizerConstants import CanonicalizerConstants as consts
 from CanonicalizeRules import CanonicalizeRules
+
+
+# def alpha_reorder_query(orig):
+#     if orig is None:
+#         return None
+#     if len(orig) <= 1:
+#         return orig
+#     if not (("=" in orig) and ("&" in orig)):
+#         return orig
+#     args = orig.split("&")
+#     args_dict = {}
+#
+#     for arg in args:
+#         if arg == "":
+#             continue
+#         key, value = arg.split("=")
+#         args_dict[key] = value
+#
+#     args_dict = dict(sorted(args_dict.items()))
+#
+#     sb = []
+#     maxi = len(args_dict) - 1
+#     i = 0
+#     for key, value in args_dict.items():
+#         sb.append(key)
+#         sb.append('=')
+#         sb.append(value)
+#         if i < maxi:
+#             sb.append('&')
+#         i += 1
+#     return "".join(sb)
+
 
 class IAURLCanonicalizer:
     def __init__(self, rules: CanonicalizeRules):
         self.rules: CanonicalizeRules = rules
+        self.WWWN_PATTERN = re.compile("^www\\d*\\.")
 
     # Helper function
     def _strip_path_session_id(self, path):
@@ -59,7 +89,7 @@ class IAURLCanonicalizer:
         if self.rules.is_set(consts.HOST_SETTINGS, consts.HOST_LOWERCASE):
             url.set_host(url.get_host().lower())
         if self.rules.is_set(consts.HOST_SETTINGS, consts.HOST_MASSAGE):
-            url.set_host(self.massage_host(url.get_host()))
+            url.set_host(self.massage_host(self, url.get_host()))
 
         if self.rules.is_set(consts.AUTH_SETTINGS, consts.AUTH_STRIP_USER):
             url.set_auth_user(None)
@@ -85,7 +115,7 @@ class IAURLCanonicalizer:
                 url.set_path(None)
             elif self.rules.is_set(consts.PATH_SETTINGS, consts.PATH_STRIP_TRAILING_SLASH_UNLESS_EMPTY):
                 if os.path.exists(path) and path.endswith('/') and len(path) > 1:
-                    path = path[0:len(path)-1]
+                    path = path[0:len(path) - 1]
             url.set_path(path)
 
         query: str = url.get_query()
@@ -105,10 +135,65 @@ class IAURLCanonicalizer:
                     query = None
             url.set_query(query)
 
+    @staticmethod
+    def alpha_reorder_query(orig):
+        if orig is None:
+            return None
+        if len(orig) <= 1:
+            return orig
+        if not (("=" in orig) and ("&" in orig)):
+            return orig
+        args = orig.split("&")
+        args_list = []
 
+        for arg in args:
+            if arg == "":
+                args_list.append(('', ''))
+                continue
+            key, value = arg.split("=")
+            args_list.append((key, value))
+
+        args_list = sorted(args_list, key=lambda x: (x[0], x[1]))
+
+        sb = []
+        maxi = len(args_list) - 1
+        i = 0
+        for key, value in args_list:
+            if not key == '' and not value == '':
+                sb.append(key)
+                sb.append('=')
+                sb.append(value)
+            if i < maxi:
+                sb.append('&')
+            i += 1
+        return "".join(sb)
+
+    @staticmethod
     def massage_host(self, host: str) -> str:
-        pass
+        while True:
+            m = self.WWWN_PATTERN.search(host)
+            if m:
+                host = host[m.end():]
+            else:
+                break
+        return host
 
-    def alpha_reorder_query(self, orig: str) -> str:
-        pass
+    @staticmethod
+    def get_default_port(scheme: str):
+        lc_scheme = scheme.lower()
+        if lc_scheme == "http":
+            return 80
+        elif lc_scheme == "https":
+            return 443
+        return 0
 
+
+test = IAURLCanonicalizer(CanonicalizeRules())
+testcases = [None, "", "a", "ab", "a=1", "ab=1", "&a=1", "a=1&b=1", "a=a&a=a", "a=a&a=b", "a=a&a=b&b=a&b=b"]
+expected = [None, "", "a", "ab", "a=1", "ab=1", "a=1&", "a=1&b=1", "a=a&a=a", "a=b&a=a", "b=b&a=b&b=a&a=a"]
+for i in range(len(testcases)):
+    print(str(testcases[i]) + " : " + str(test.alpha_reorder_query(testcases[i])) + " --> " + str(expected[i]))
+    if expected[i] == test.alpha_reorder_query(testcases[i]):
+        print("Correct\n=======")
+    else:
+        print("Wrong!!\n======")

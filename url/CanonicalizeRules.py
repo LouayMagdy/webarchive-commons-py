@@ -1,4 +1,4 @@
-from .CanonicalizerConstants import CanonicalizerConstants
+from CanonicalizerConstants import CanonicalizerConstants
 
 class CanonicalizeRules:
     def __init__(self):

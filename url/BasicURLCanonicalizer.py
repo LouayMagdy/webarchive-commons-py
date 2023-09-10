@@ -161,10 +161,10 @@ class BasicURLCanonicalizer:
                     return f'{ip[0]}.{ip[1]}.{ip[2]}.{ip[3]}'
         return None
 
-    def UTF8(self):
-        if self._UTF8 is None:
-            self._UTF8 = codecs.lookup("utf-8")
-        return self._UTF8
+    # def UTF8(self):
+    #     if self._UTF8 is None:
+    #         self._UTF8 = codecs.lookup("utf-8")
+    #     return self._UTF8
 
     def minimal_escape(self, input: str) -> str:
         return self.escape_once(self.unescape_repeatedly(input))
@@ -258,26 +258,19 @@ class BasicURLCanonicalizer:
     ############ append_decoded_pct_utf8 function needs a lot of built-in modules to be implemented here (in python) ##############
     ############ WILL BE HANDLED LATER #############
 
-    def append_decoded_pct_utf8(self, sb: [], bbuf, input: str, seq_start: int, seq_end: int, utf8decoder):
-        #     # // assert bbuf.position() * 3 == seqEnd - seqStart;
-        #     # assert bbuf.position() * 3 == seq_end - seq_start
-        #
-        #     utf8decoder.reset()
-        #     cbuf = bytearray(bbuf.position())
-        #     bbuf.flip()
-        #
-        #     while bbuf.position() < bbuf.limit():
-        #         coder_result, _, _ = utf8decoder.decode(bbuf, cbuf, True)
-        #         sb.append(cbuf.decode())
-        #
-        #         if coder_result.is_malformed():
-        #             undecodable_pct_hex = input[seq_start + 3 * bbuf.position():
-        #                                             seq_start + 3 * bbuf.position() + 3 * len(coder_result)]
-        #             sb.append(undecodable_pct_hex)
-        #             bbuf.position(bbuf.position() + len(coder_result))
-        #
-        #         cbuf.clear()
-        pass
+    def append_decoded_pct_utf8(self, sb, bbuf, inputStr, seqStart, seqEnd, utf8decoder):
+        utf8decoder.reset()
+        cbuf = bytearray(bbuf.position())
+        bbuf.flip()
+        while bbuf.position() < bbuf.limit():
+            coder_result = utf8decoder.decode(bbuf, cbuf, True)
+            sb += cbuf.decode()
+            if coder_result.isMalformed():
+                undecodable_pct_hex = inputStr[seqStart + 3 * bbuf.position():seqStart + 3 * bbuf.position() + 3 * len(coder_result)]
+                sb += undecodable_pct_hex
+                bbuf.position(bbuf.position() + len(coder_result))
+            cbuf.clear()
+
 
     def get_hex(self, b):
         if type(b) is str:
