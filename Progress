@@ -27,3 +27,6 @@ ResourceExtractor.py
                     CRCOutputStream.py -------> ok ### take care of the write_byte
                         CRC32.py --------> ok
                 CRCInputStream.py ---------> ok
+            GZIPSeriesMember.py
+                GZIPFooter.py --------> ok
+                CustomInflater.py -------> ok
