@@ -7,11 +7,13 @@ class CRC32:
         if not CRC32._CRC32_TABLE:
             CRC32._CRC32_TABLE = CRC32.generate_crc_table()
 
-    def update(self, byte_arr: bytearray = None, num: int = None):
+    def update(self, byte_arr: bytearray = None, offset: int = 0, length: int = None, num: int = None):
         if num is not None:
             self._crc = (self._crc >> 8) ^ CRC32._CRC32_TABLE[(self._crc ^ num) & 0xFF]
         elif byte_arr is not None:
-            for b in byte_arr:
+            if length is None:
+                length = len(byte_arr)
+            for b in byte_arr[offset: offset + length]:
                 self._crc = (self._crc >> 8) ^ CRC32._CRC32_TABLE[(self._crc ^ b) & 0xFF]
 
     def get_value(self):

@@ -19,15 +19,29 @@ class CustomInflater:
     def set_output_size(self, output_size):
         self._output_size = min(output_size, 1024)
 
-    def inflate(self, output: bytearray) -> int:
-        output[:] = self._decompressor.decompress(self._data, self._output_size)
-        self._written_bytes += len(output)
+    def inflate(self, output: bytearray, offset: int = 0, length: int = None) -> int:
+        if length is None:
+            length = len(output)
+        if length + offset > len(output):
+            raise IndexError("Index out of Bound")
+        temp_out = self._decompressor.decompress(self._data, min(self._output_size, length))
+        output[offset: offset + len(temp_out)] = temp_out[:]
+        self._written_bytes += len(temp_out)
         self._read_bytes = self._data_length - len(self._decompressor.unconsumed_tail)
         self._data = self._decompressor.unconsumed_tail
-        return len(output)
+        return len(temp_out)
 
-    def get_bytes_written(self):
+    def get_bytes_written(self) -> int:
         return self._written_bytes
 
-    def get_bytes_read(self):
+    def get_bytes_read(self) -> int:
         return self._read_bytes
+
+    def needs_input(self) -> bool:
+        return self._data_length == self._read_bytes
+
+    def finished(self) -> bool:
+        return self._decompressor.eof
+
+    def get_remaining(self):
+        return self._decompressor.unconsumed_tail
