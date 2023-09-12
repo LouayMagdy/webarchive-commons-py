@@ -10,9 +10,11 @@ class CustomInflater:
         self._data_length = 0
         self._output_size = output_size
 
-    def set_input(self, data: bytearray):
-        self._data = data
-        self._data_length = len(data)
+    def set_input(self, data: bytearray, offset: int = 0, length: int = None):
+        if length is None:
+            length = len(data)
+        self._data = data[offset: offset + length]
+        self._data_length = length
         self._read_bytes = 0
         self._written_bytes = 0
 

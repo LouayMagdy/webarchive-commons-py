@@ -13,7 +13,7 @@ from utils.ByteOp import *
 
 
 class GZIPDecoder:
-    SEARCH_EOF_AT_START = -(sys.maxsize - 1)
+    SEARCH_EOF_AT_START = -sys.maxsize - 1
 
     def __init__(self, max_name_size=1024, max_comment_size=None):
         "note that if only max_name_size is provided, both attributes are set to it"

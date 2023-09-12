@@ -22,6 +22,8 @@ def add_logger(cls):
 
 @add_logger
 class GZIPSeriesMember:
+    SKIP_LENGTH = 1024 * 4
+
     def __init__(self, gzip_member_series, gzip_header: GZIPHeader):
         self._series = gzip_member_series
         self._header = gzip_header
@@ -143,8 +145,7 @@ class GZIPSeriesMember:
 
     def skip(self, amt: int) -> int:
         skipped = 0
-        SKIP_LENGTH = 1024 * 4
-        b = bytearray(SKIP_LENGTH)
+        b = bytearray(self.SKIP_LENGTH)
         while amt > 0:
             r = self.read(b, offset=0, length=len(b))
             if r == -1:
