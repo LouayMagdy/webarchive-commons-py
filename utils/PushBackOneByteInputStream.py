@@ -1,7 +1,7 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 
 
-class PushBackOneByteInputStream:
+class PushBackOneByteInputStream(ABC):
     @abstractmethod
     def push_back(self):
         pass
