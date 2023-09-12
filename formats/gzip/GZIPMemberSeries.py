@@ -3,7 +3,6 @@ import sys
 import os
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')))
-from formats.gzip.GZIPConstants import GZIPConstants
 from formats.gzip.GZIPDecoder import GZIPDecoder
 from formats.gzip.GZIPFormatException import *
 from formats.gzip.GZIPSeriesMember import GZIPSeriesMember
@@ -19,10 +18,14 @@ def add_logger(cls):
 @add_logger
 class GZIPMemberSeries:
     constants = {
-        "STATE_DEFLATING": 0,
-        "STATE_IOERROR": 1,
-        "STATE_ALIGNED": 2,
-        "STATE_SCANNING": 3,
+        "STATE_DEFLATING": 0,  # a gzip header and some amount of deflate information has been read, without errors
+        "STATE_IOERROR": 1,  # an IOException has been detected on the underlying Stream
+        "STATE_ALIGNED": 2,  # the gzip footer of a record has *just* been read, and it is expected that the underlying
+                             # Stream is either at EOF, or at the start of another gzip member.
+                             # In Strict Mode this is the initial state.
+        "STATE_SCANNING": 3,  # The underlying Stream is in an unknown state - either because of a GZ error in the
+                              # previous member, and we're now attempting to locate the next member.
+                              # In Lax Mode, this is the initial state.
         "STATE_START": 4,
         "BUF_SIZE": 4096,
     }
@@ -82,13 +85,13 @@ class GZIPMemberSeries:
     def get_next_member(self) -> GZIPSeriesMember | None:
         if self.state == self.constants.get('STATE_IOERROR'):
             curr_mem_start_offset, context = self._current_member_start_offset, self._stream_context
-            raise IOError(f"get_next_member() on IOError Stream at {curr_mem_start_offset} in {context}")
-        self._logger.info("getNextMember")
+            raise IOError(f"get_next_member on IOError Stream at {curr_mem_start_offset} in {context}")
+        self._logger.info("get_next_member")
         if self._got_eof:
             self._logger.info("get_next_member AT EOF")
             return None
         if self.state == self.constants.get('STATE_DEFLATING'):
-            self._logger.info("get_next_member-without complete read - finishing current")
+            self._logger.info("get_next_member - without complete read -> finishing current")
             try:
                 self._current_member.skip_member()
                 self._logger.info("Skipped unfinished member")
@@ -96,7 +99,7 @@ class GZIPMemberSeries:
                 self._logger.info("GZIPFormatException on skip_member()")
                 if self._strict:
                     raise GZIPFormatException(f"GZIPFormatException at {self._offset} in {self._stream_context}")
-            # state now is STATE_SCANNING
+                # state now is STATE_SCANNING
         elif self.state == self.constants.get('STATE_SCANNING'):
             # gzip error with the prev. record: move the underlying Stream back to 3 bytes after the last member start
             curr_mem_start_offset_p3 = self._current_member_start_offset + 3
@@ -105,7 +108,7 @@ class GZIPMemberSeries:
             self._stream.set_offset(curr_mem_start_offset_p3)
 
         self._current_member = None
-        while self._current_member is None:
+        while not self._current_member:
             # scan the next record - note that this class is extending input stream
             amount_skipped = self._decoder.align_on_magic3(self)
             if self._logger.isEnabledFor(logging.INFO):
@@ -216,5 +219,3 @@ class GZIPMemberSeries:
 
     def set_strict(self, strict: bool):
         self._strict = strict
-
-

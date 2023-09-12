@@ -14,7 +14,7 @@ ResourceExtractor.py
                 StreamWrappedInputStream.py ---------> ok
                     PushBackOneByteInputStream.py ---------> ok
         TransformingResourceProducer.py ----------> ok
-        GZIPMemberSeries.py
+        GZIPMemberSeries.py -----------> ok
             GZIPConstants.py ----------> ok
             GZIPDecoder.py  ------------> ok     #### take care of the input stream
                 GZIPHeader.py ---------> ok

@@ -46,4 +46,4 @@ class CustomInflater:
         return self._decompressor.eof
 
     def get_remaining(self):
-        return self._decompressor.unconsumed_tail
+        return len(self._decompressor.unconsumed_tail)
