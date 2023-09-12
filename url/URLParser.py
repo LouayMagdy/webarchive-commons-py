@@ -131,8 +131,15 @@ class URLParser:
         user_info = None
         colon_port = None
 
-        at_index = uri_authority.index(self.COMMERCIAL_AT)
-        port_colon_index = uri_authority.index(self.COLON, 0 if at_index < 0 else at_index)
+        try:
+            at_index = uri_authority.index(self.COMMERCIAL_AT)
+        except:
+            at_index = -1  # return -1 if not found
+
+        try:
+            port_colon_index = uri_authority.index(self.COLON, 0 if at_index < 0 else at_index)
+        except:
+            port_colon_index = -1  # return -1 if not found
 
         if at_index < 0 and port_colon_index < 0:
             hostname = uri_authority

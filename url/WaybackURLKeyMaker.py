@@ -1,5 +1,3 @@
-import urllib.parse
-from urllib.parse import urlparse
 from typing import List
 from RewriteRule import RewriteRule
 from DefaultIAURLCanonicalizer import DefaultIAURLCanonicalizer
@@ -45,7 +43,10 @@ class WaybackURLKeyMaker:
         key = hURL.get_url_string(self.surt_mode, self.surt_mode, False)
         if not self.surt_mode:
             return key
-        parenIdx = key.index('(')
+        try:
+            parenIdx = key.index('(')
+        except:
+            parenIdx = -1
         if parenIdx == -1:
             return url
         key = key[parenIdx + 1:]
@@ -64,3 +65,23 @@ class WaybackURLKeyMaker:
         for rule in self.custom_rules:
             rule.rewrite(sb)
         return sb
+
+
+# ******************** TESTING ********************#
+test = WaybackURLKeyMaker()
+testers = [None, "", "dskgfljsdlkgjslkj", "filedesc:foo.arc.gz", "filedesc:/foo.arc.gz", "filedesc://foo.arc.gz",
+           "warcinfo:foo.warc.gz", "dns:alexa.com", "dns:archive.org", "http://archive.org/", "http://archive.org/goo/",
+           "http://archive.org/goo/?", "http://archive.org/goo/?b&a", "http://archive.org/goo/?a=2&b&a=1",
+           "http://archive.org:/"]
+models = ["-", "-", "dskgfljsdlkgjslkj)/", "filedesc:foo.arc.gz", "filedesc:/foo.arc.gz", "filedesc://foo.arc.gz",
+          "warcinfo:foo.warc.gz", "com,alexa)", "org,archive)", "org,archive)/", "org,archive)/goo", "org,archive)/goo",
+          "org,archive)/goo?a&b", "org,archive)/goo?a=1&a=2&b", "org,archive)/"]
+#
+# testers = ["http://archive.org/goo/?b&a", "http://archive.org/goo/?a=2&b&a=1",
+#            "http://archive.org:/"]
+# models = ["org,archive)/goo?a&b", "org,archive)/goo?a=1&a=2&b", "org,archive)/"]
+
+
+for i in range(len(testers)):
+    key_made = test.make_key(testers[i])
+    print(f"test: {key_made} VS {models[i]} --> {key_made == (models[i])}")

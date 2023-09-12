@@ -3,7 +3,9 @@ import os
 from HandyURL import HandyURL
 from CanonicalizerConstants import CanonicalizerConstants as consts
 from CanonicalizeRules import CanonicalizeRules
-
+from URLCanonicalizer import URLCanonicalizer
+from URLRegexTransformer import URLRegexTransformer
+from helping_functions.StringFieldExtractor import StringFieldExtractor
 
 # def alpha_reorder_query(orig):
 #     if orig is None:
@@ -36,7 +38,7 @@ from CanonicalizeRules import CanonicalizeRules
 #     return "".join(sb)
 
 
-class IAURLCanonicalizer:
+class IAURLCanonicalizer(URLCanonicalizer, consts):
     def __init__(self, rules: CanonicalizeRules):
         self.rules: CanonicalizeRules = rules
         self.WWWN_PATTERN = re.compile("^www\\d*\\.")
@@ -58,7 +60,7 @@ class IAURLCanonicalizer:
         return stripped_path[:-1]  # Remove the "#" at the end
 
     # Helper function
-    def _strip_query_session_id(self, query):
+    def _strip_query_session_id(self, query: str) -> str:
         # Define the regular expression patterns for session ID tokens
         pattern_list = [
             {'pattern': r'(?i)^.*?(?:jsessionid=([0-9a-zA-Z]{32}))(?:(&amp;)?$)', 'start': 1, 'end': 2},
@@ -109,12 +111,13 @@ class IAURLCanonicalizer:
             if self.rules.is_set(consts.PATH_SETTINGS, consts.PATH_LOWERCASE):
                 path = path.lower()
             if self.rules.is_set(consts.PATH_SETTINGS, consts.PATH_STRIP_SESSION_ID):
-                path = self._strip_path_session_id(path)
+                for_self = URLRegexTransformer()
+                path = URLRegexTransformer.strip_path_session_id(for_self, path)
 
             if self.rules.is_set(consts.PATH_SETTINGS, consts.PATH_STRIP_EMPTY):
                 url.set_path(None)
             elif self.rules.is_set(consts.PATH_SETTINGS, consts.PATH_STRIP_TRAILING_SLASH_UNLESS_EMPTY):
-                if os.path.exists(path) and path.endswith('/') and len(path) > 1:
+                if path.endswith('/') and len(path) > 1:
                     path = path[0:len(path) - 1]
             url.set_path(path)
 
@@ -123,7 +126,9 @@ class IAURLCanonicalizer:
             # we have a query... what to do with it?
             # 1st: remove unneeded:
             if self.rules.is_set(consts.QUERY_SETTINGS, consts.QUERY_STRIP_SESSION_ID):
-                query = self._strip_query_session_id(query)
+                if not query == '':
+                    for_self = URLRegexTransformer()
+                    query = URLRegexTransformer.strip_query_session_id(for_self, query)
             # lower-case
             if self.rules.is_set(consts.QUERY_SETTINGS, consts.QUERY_LOWERCASE):
                 query = query.lower()
@@ -141,16 +146,17 @@ class IAURLCanonicalizer:
             return None
         if len(orig) <= 1:
             return orig
-        if not (("=" in orig) and ("&" in orig)):
+        if not (("=" in orig) or ("&" in orig)):
             return orig
         args = orig.split("&")
+        sfe = StringFieldExtractor('=', 1)
         args_list = []
 
         for arg in args:
             if arg == "":
                 args_list.append(('', ''))
                 continue
-            key, value = arg.split("=")
+            key, value = sfe.split(arg)
             args_list.append((key, value))
 
         args_list = sorted(args_list, key=lambda x: (x[0], x[1]))
@@ -159,10 +165,11 @@ class IAURLCanonicalizer:
         maxi = len(args_list) - 1
         i = 0
         for key, value in args_list:
-            if not key == '' and not value == '':
+            if not key is None and not key == '':
                 sb.append(key)
-                sb.append('=')
-                sb.append(value)
+                if value is not None:
+                    sb.append('=')
+                    sb.append(value)
             if i < maxi:
                 sb.append('&')
             i += 1
@@ -188,12 +195,12 @@ class IAURLCanonicalizer:
         return 0
 
 
-test = IAURLCanonicalizer(CanonicalizeRules())
-testcases = [None, "", "a", "ab", "a=1", "ab=1", "&a=1", "a=1&b=1", "a=a&a=a", "a=a&a=b", "a=a&a=b&b=a&b=b"]
-expected = [None, "", "a", "ab", "a=1", "ab=1", "a=1&", "a=1&b=1", "a=a&a=a", "a=b&a=a", "b=b&a=b&b=a&a=a"]
-for i in range(len(testcases)):
-    print(str(testcases[i]) + " : " + str(test.alpha_reorder_query(testcases[i])) + " --> " + str(expected[i]))
-    if expected[i] == test.alpha_reorder_query(testcases[i]):
-        print("Correct\n=======")
-    else:
-        print("Wrong!!\n======")
+# test = IAURLCanonicalizer(CanonicalizeRules())
+# testcases = [None, "", "a", "ab", "a=1", "ab=1", "&a=1", "a=1&b=1", "a=a&a=a", "a=a&a=b", "a=a&a=b&b=a&b=b"]
+# expected = [None, "", "a", "ab", "a=1", "ab=1", "a=1&", "a=1&b=1", "a=a&a=a", "a=b&a=a", "b=b&a=b&b=a&a=a"]
+# for i in range(len(testcases)):
+#     print(str(testcases[i]) + " : " + str(test.alpha_reorder_query(testcases[i])) + " --> " + str(expected[i]))
+#     if expected[i] == test.alpha_reorder_query(testcases[i]):
+#         print("Correct\n=======")
+#     else:
+#         print("Wrong!!\n======")

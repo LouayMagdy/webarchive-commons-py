@@ -24,14 +24,25 @@ class URLRegexTransformer:
         i = 0
         maxi = len(op)
         while i < maxi:
-            if orig_LC.index(op[i].match) != -1:
+            try:
+                orig_idx = orig_LC.index(op[i].match)
+            except:
+                orig_idx = -1
+
+            if orig_idx != -1:
                 sb = orig
                 break
             i += 1
         if sb == "":
             return orig
+
         while i < maxi:
-            if orig_LC.index(op[i].match) != -1:
+            try:
+                orig_idx = orig_LC.index(op[i].match)
+            except:
+                orig_idx = -1
+
+            if orig_idx != -1:
                 m = op[i].pattern.match(sb)
                 if m is not None and m.matches():  # NOT SURE ABOUT THIS LINE
                     if m.group(op[i].end) is not None:

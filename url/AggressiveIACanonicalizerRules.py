@@ -1,8 +1,11 @@
-from .CanonicalizeRules import CanonicalizeRules
-from .CanonicalizerConstants import CanonicalizerConstants as consts
+from CanonicalizeRules import CanonicalizeRules
+from CanonicalizerConstants import CanonicalizerConstants as consts
+
 
 class AggressiveIACanonicalizerRules(CanonicalizeRules):
-    def __init__(self, strip_splash = True):
+
+    def __init__(self, strip_splash=True):
+        super().__init__()
         self.set_rule(consts.SCHEME_SETTINGS, consts.SCHEME_LOWERCASE)
         self.set_rule(consts.HOST_SETTINGS, consts.HOST_LOWERCASE|consts.HOST_MASSAGE)
         self.set_rule(consts.PORT_SETTINGS, consts.PORT_STRIP_DEFAULT)
