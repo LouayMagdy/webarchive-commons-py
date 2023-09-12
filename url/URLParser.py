@@ -1,5 +1,7 @@
 import re
 from HandyURL import HandyURL
+import urllib.parse
+
 
 class URLParser:
     """
@@ -67,7 +69,7 @@ class URLParser:
         self.COMMERCIAL_AT = '@'
         self.PERCENT_SIGN = '%'
         self.COLON = ':'
-        self.STRAY_SPACING = "[\n\r\t\\p{Zl}\\p{Zp}\u0085]+"
+        self.STRAY_SPACING = "[\n|\r|\t]*"
         self.HTTP_SCHEME_SLASHES = re.compile("^(https?://)/+(.*)")
         self.DNS_SCHEME = "dns:"
         self.FILEDESC_SCHEME = "filedesc:"
@@ -89,12 +91,14 @@ class URLParser:
         ]
         self.ALL_SCHEMES_PATTERN = re.compile("(?i)^(http|https|ftp|mms|rtsp|wais)://.*")
 
+    @staticmethod
     def url_to_scheme(self, url: str) -> str:
         for scheme in self.ALL_SCHEMES:
             if url.startswith(scheme):
                 return scheme
         return None
 
+    @staticmethod
     def add_default_scheme_if_needed(self, url_string: str) -> str:
         if url_string is None:
             return None
@@ -107,11 +111,15 @@ class URLParser:
     def parse(self, url_string: str) -> HandyURL:
         url_string = url_string.strip()
         url_string = url_string.replace(self.STRAY_SPACING, "")
+        # regex doesn't work with the \r if it is in the middle of a word (with no spaces around), so I explicitely wrote it!
+        url_string = url_string.replace('\r', '')
+        url_string = url_string.replace('\n', '')
+        url_string = url_string.replace('\t', '')
         if url_string.startswith(self.DNS_SCHEME) or url_string.startswith(self.FILEDESC_SCHEME) or url_string.startswith(self.WARCINFO_SCHEME):
             h = HandyURL()
             h.set_opaque(url_string)
             return h
-        url_string = self.add_default_scheme_if_needed(url_string)
+        url_string = URLParser.add_default_scheme_if_needed(self, url_string)
         m1 = self.HTTP_SCHEME_SLASHES.match(url_string)
         if m1:
             url_string = m1.group(1) + m1.group(2)
@@ -164,10 +172,122 @@ class URLParser:
                 # What's happened?!
                 pass
         if user_info is not None:
-            pass_colon_index = user_info.index(self.COLON)
+            try:
+                pass_colon_index = user_info.index(self.COLON)
+            except:
+                pass_colon_index = -1
             if pass_colon_index == -1:  # no password
                 user_name = user_info
             else:
                 user_name = user_info[:pass_colon_index]
                 user_pass = user_info[pass_colon_index + 1:]
         return HandyURL(uri_scheme, user_name, user_pass, hostname, port, uri_path, uri_query, uri_fragment)
+
+
+
+
+
+
+
+######################## Testing ########################
+
+# test = URLParser()
+#
+#
+# def add_default_scheme_if_needed_test():
+#     print(URLParser.add_default_scheme_if_needed(test, None))
+#     print(URLParser.add_default_scheme_if_needed(test, ""))
+#     print(URLParser.add_default_scheme_if_needed(test, "http://www.fool.com"))
+#     print(URLParser.add_default_scheme_if_needed(test, "http://www.fool.com/"))
+#     print(URLParser.add_default_scheme_if_needed(test, "www.fool.com"))
+#     print(URLParser.add_default_scheme_if_needed(test, "www.fool.com/"))
+#
+#     # assert URLParser.add_default_scheme_if_needed(test, None) is None
+#     # assert URLParser.add_default_scheme_if_needed(test, "") == "http://"
+#     # assert URLParser.add_default_scheme_if_needed(test, "http://www.fool.com") == "http://www.fool.com"
+#     # assert URLParser.add_default_scheme_if_needed(test, "http://www.fool.com/") == "http://www.fool.com/"
+#     # assert URLParser.add_default_scheme_if_needed(test, "www.fool.com") == "http://www.fool.com"
+#     # assert URLParser.add_default_scheme_if_needed(test, "www.fool.com/") == "http://www.fool.com/"
+#     # print("Test_add_default_scheme_if_needed passed!!")
+#
+#
+# add_default_scheme_if_needed_test()
+#
+#
+# def parse_test():
+#     print("O(%s) E(%s)" % ("%66", urllib.parse.unquote("%66")))
+#
+#     check_parse("http://www.archive.org/index.html#foo", None, "http", None, None, "www.archive.org", -1, "/index.html", None, "foo", "http://www.archive.org/index.html#foo", "/index.html")
+#     check_parse("http://www.archive.org/", None, "http", None, None, "www.archive.org", -1, "/", None, None, "http://www.archive.org/", "/")
+#     check_parse("http://www.archive.org", None, "http", None, None, "www.archive.org", -1, "", None, None, "http://www.archive.org", "")
+#     check_parse("http://www.archive.org?", None, "http", None, None, "www.archive.org", -1, "", "", None, "http://www.archive.org/?", "/?")
+#     check_parse("http://www.archive.org#", None, "http", None, None, "www.archive.org", -1, "", None, "", "http://www.archive.org/#", "/")
+#     check_parse("http://www.archive.org#foo#bar#baz", None, "http", None, None, "www.archive.org", -1, "", None, "foo#bar#baz", "http://www.archive.org/#foo#bar#baz", "/")
+#     check_parse("http://www.archive.org:8080/index.html?query#foo", None, "http", None, None, "www.archive.org", 8080, "/index.html", "query", "foo", "http://www.archive.org:8080/index.html?query#foo", "/index.html?query")
+#     check_parse("http://www.archive.org:8080/index.html?#foo", None, "http", None, None, "www.archive.org", 8080, "/index.html", "", "foo", "http://www.archive.org:8080/index.html?#foo", "/index.html?")
+#     check_parse("http://www.archive.org:8080?#foo", None, "http", None, None, "www.archive.org", 8080, "", "", "foo", "http://www.archive.org:8080/?#foo", "/?")
+#     check_parse("http://bücher.ch:8080?#foo", None, "http", None, None, "bücher.ch", 8080, "", "", "foo", "http://bücher.ch:8080/?#foo", "/?")
+#
+#     check_parse("dns:bücher.ch", "dns:bücher.ch", None, None, None, None, -1, None, None, None, "dns:bücher.ch", "")
+#
+#     check_parse("http://www.archive.org/?foo?what", None, "http", None, None, "www.archive.org", -1, "/", "foo?what", None, "http://www.archive.org/?foo?what", "/?foo?what")
+#     check_parse("http://www.archive.org/?foo?what#spuz?baz?", None, "http", None, None, "www.archive.org", -1, "/", "foo?what", "spuz?baz?", "http://www.archive.org/?foo?what#spuz?baz?", "/?foo?what")
+#     check_parse("http://www.archive.org/?foo?what#spuz?baz?#fooo", None, "http", None, None, "www.archive.org", -1, "/", "foo?what", "spuz?baz?#fooo", "http://www.archive.org/?foo?what#spuz?baz?#fooo", "/?foo?what")
+#     check_parse("http://jdoe@www.archive.org:8080/index.html?query#foo", None, "http", "jdoe", None, "www.archive.org", 8080, "/index.html", "query", "foo", "http://jdoe@www.archive.org:8080/index.html?query#foo", "/index.html?query")
+#     check_parse("http://jdoe:****@www.archive.org:8080/index.html?query#foo", None, "http", "jdoe", "****", "www.archive.org", 8080, "/index.html", "query", "foo", "http://jdoe:****@www.archive.org:8080/index.html?query#foo", "/index.html?query")
+#     check_parse("http://:****@www.archive.org:8080/index.html?query#foo", None, "http", "", "****", "www.archive.org", 8080, "/index.html", "query", "foo", "http://:****@www.archive.org:8080/index.html?query#foo", "/index.html?query")
+#     check_parse(" \n http://:****@www.archive.org:8080/inde\rx.html?query#foo \r\n \t ", None, "http", "", "****", "www.archive.org", 8080, "/index.html", "query", "foo", "http://:****@www.archive.org:8080/index.html?query#foo", "/index.html?query")
+#     print("done checking!")
+#     # print("done checking!")
+#
+#
+# def check_parse(s, opaque, scheme, authUser, authPass, host, port, path, query, fragment, urlString, pathQuery):
+#     h = URLParser.parse(test, s)
+#
+#     # print("Input:(%s)" % s)
+#     # print("HandyURL\t%s" % h.to_debug_string())
+#
+#     # assert scheme == h.get_scheme()
+#     if not scheme == h.get_scheme():
+#         print("Scheme mismatch: %s != %s" % (scheme, h.get_scheme()))
+#
+#     # assert authUser == h.get_auth_user()
+#     if not authUser == h.get_auth_user():
+#         print("authUser mismatch: %s != %s" % (authUser, h.get_auth_user()))
+#
+#     # assert authPass == h.get_auth_pass()
+#     if not authPass == h.get_auth_pass():
+#         print("authPass mismatch: %s != %s" % (authPass, h.get_auth_pass()))
+#
+#     # assert host == h.get_host()
+#     if not host == h.get_host():
+#         print("host mismatch: %s != %s" % (host, h.get_host()))
+#
+#     # assert port == h.get_port()
+#     if not port == h.get_port():
+#         print("port mismatch: %s != %s" % (port, h.get_port()))
+#
+#     # assert path == h.get_path()
+#     if not path == h.get_path():
+#         print("path mismatch: %s != %s" % (path, h.get_path()))
+#
+#     # assert query == h.get_query()
+#     if not query == h.get_query():
+#         print("query mismatch: %s != %s" % (query, h.get_query()))
+#
+#     # assert fragment == h.get_hash()
+#     if not fragment == h.get_hash():
+#         print("fragment mismatch: %s != %s" % (fragment, h.get_hash()))
+#
+#     # assert urlString == h.get_url_string()
+#     if not urlString == h.get_url_string():
+#         print("urlString mismatch: %s != %s" % (urlString, h.get_url_string()))
+#
+#     # assert pathQuery == h.get_path_query()
+#     if not pathQuery == h.get_path_query():
+#         print("pathQuery mismatch: %s != %s" % (pathQuery, h.get_path_query()))
+#
+#     print("Correct case!")
+#
+#
+# parse_test()
