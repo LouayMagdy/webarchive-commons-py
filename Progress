@@ -31,3 +31,9 @@ ResourceExtractor.py
                 GZIPFooter.py --------> ok
                 CustomInflater.py -------> ok
             Stream.py -----------> ok  ### used BytesIO to extend Closeable
+        GZIPResourceContainer.py
+            ResourceParseException.py ------> ok
+            GZIPResource.py ---------> ok
+                EOFObserver.py ---------> ok
+                EOFNotifyingInputStream.py ---------> ok  ### extending FilteringInputStream is replaced by having InputStream field
+                GZIPMetaData.py  --------> ok

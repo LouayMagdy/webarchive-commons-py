@@ -1,10 +1,15 @@
 import sys
 import os
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')))
-from my_resource.generic.GenericResourceProducer import GenericResourceProducer
+
+# some package from Hadoop --------------------------
+from formats.gzip.GZIPMemberSeries import GZIPMemberSeries
+from my_resource.ResourceProducer import ResourceProducer
 from my_resource.ResourceFactory import ResourceFactory
 from my_resource.TransformingResourceProducer import TransformingResourceProducer
-from my_resource.ResourceProducer import ResourceProducer
+from my_resource.generic.GenericResourceProducer import GenericResourceProducer
+from streamcontext.Stream import Stream
+
 
 class EnvelopedResourceFile:
     def __init__(self, resource_factory: ResourceFactory):

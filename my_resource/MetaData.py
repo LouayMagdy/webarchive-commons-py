@@ -1,10 +1,14 @@
 import logging
 
 
-class MetaData(dict):
-    _logger = logging.getLogger(__name__)
+def add_logger(cls):
+    cls._logger = logging.getLogger(cls.__name__)
+    return cls
 
-    def __init__(self, parent_meta_data=None, name=None):
+
+@add_logger
+class MetaData(dict):
+    def __init__(self, parent_meta_data=None, name: str = None):
         super().__init__()
         if parent_meta_data is None:
             self._topMetaData = self
@@ -71,7 +75,6 @@ class MetaData(dict):
             self.append_child(key, n)
         except KeyError as e:
             self._logger.warning(e)
-
 
 # metadata = MetaData()
 # metadata.put("first", 1)

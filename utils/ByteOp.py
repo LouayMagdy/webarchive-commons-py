@@ -142,7 +142,7 @@ def draw_hex(byte_arr: bytearray, offset=0, length=None, bytes_per_row=None):
         length = len(byte_arr)
     if bytes_per_row is None:
         bytes_per_row = length
-    num_rows = math.ceil(length / bytes_per_row)
+    num_rows = math.floor(length / bytes_per_row)
     if not num_rows:
         num_rows = 1
     bytes_to_output = length
@@ -160,7 +160,7 @@ def draw_hex(byte_arr: bytearray, offset=0, length=None, bytes_per_row=None):
                 string_builder.append("0")
                 string_builder.append(hex_string)
         bytes_to_output -= bytes_this_row
-        string_builder.append('\n') # this line may need to be removed
+        # string_builder.append('\n') # this line may need to be removed
     return string_builder
 
 

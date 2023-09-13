@@ -1,8 +1,14 @@
 from abc import abstractmethod
+import sys
+import os
+
+sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')))
+from my_resource.Resource import Resource
+
 
 class ResourceProducer:
     @abstractmethod
-    def get_next(self):
+    def get_next(self) -> Resource | None:
         pass
 
     @abstractmethod
@@ -10,5 +16,5 @@ class ResourceProducer:
         pass
 
     @abstractmethod
-    def get_context(self):
+    def get_context(self) -> str:
         pass
