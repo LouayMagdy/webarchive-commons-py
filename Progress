@@ -31,7 +31,7 @@ ResourceExtractor.py
                 GZIPFooter.py --------> ok
                 CustomInflater.py -------> ok
             Stream.py -----------> ok  ### used BytesIO to extend Closeable
-        GZIPResourceContainer.py
+        GZIPResourceContainer.py ---------> ok
             ResourceParseException.py ------> ok
             GZIPResource.py ---------> ok
                 EOFObserver.py ---------> ok

@@ -3,12 +3,11 @@ import os
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')))
 
 from formats.gzip.GZIPMemberSeries import GZIPMemberSeries
-from formats.gzip.GZIPSeriesMember import GZIPSeriesMember
 from my_resource.MetaData import MetaData
 from my_resource.Resource import Resource
 from my_resource.ResourceContainer import ResourceContainer
 from my_resource.ResourceProducer import ResourceProducer
-from my_resource.ResourceParseException import ResourceParseException
+from my_resource.gzip.GZIPResource import GZIPResource
 
 
 class GZIPResourceContainer(ResourceProducer, ResourceContainer):
@@ -28,11 +27,10 @@ class GZIPResourceContainer(ResourceProducer, ResourceContainer):
         if self._series.got_eof() or (self._end_offset != self._UNLIMITED and self._series.get_offset() > self._end_offset):
             return None
         member = self._series.get_next_member()
-        if member is None:
-            return None
-        top = MetaData()
-        # implement Gzip Resource
+        return None if member is None else GZIPResource(MetaData(), self, member)
 
+    def close(self):
+        self._series.close()
 
-
-
+    def get_context(self) -> str:
+        return f"Context{self._series.get_stream_context()}{self._series.get_current_member_start_offset()}"
