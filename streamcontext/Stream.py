@@ -20,5 +20,5 @@ class Stream(ABC, IOBase):
         pass
 
     @abstractmethod
-    def at_eof(self) -> bool:
+    def is_at_eof(self) -> bool:
         pass

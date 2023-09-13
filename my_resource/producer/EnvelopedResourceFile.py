@@ -8,7 +8,9 @@ from my_resource.ResourceProducer import ResourceProducer
 from my_resource.ResourceFactory import ResourceFactory
 from my_resource.TransformingResourceProducer import TransformingResourceProducer
 from my_resource.generic.GenericResourceProducer import GenericResourceProducer
+from my_resource.gzip.GZIPResourceContainer import GZIPResourceContainer
 from streamcontext.Stream import Stream
+
 
 
 class EnvelopedResourceFile:
