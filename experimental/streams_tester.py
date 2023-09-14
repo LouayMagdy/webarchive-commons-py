@@ -53,14 +53,26 @@ def dump_short(output_stream, input_stream):
 
 import mmap
 from streamcontext.RandomAccessFileStream import RandomAccessFileStream
+from streamcontext.HTTP11Stream import HTTP11Stream
 
-rfa = RandomAccessFileStream(open("./experimental/writing_short.txt", 'rb'))
-b = bytearray(100)
-print(b)
-print(rfa.read(b, 0, 10), b)
-print(f"Curr offset: {rfa.get_offset()}")
-rfa.set_offset(20)
-print(rfa.read(b, 0, 10), b)
-print(f"Curr offset: {rfa.get_offset()}")
-rfa.set_offset(0)
-print(rfa.read(b, 0, 400), b)
+# rfa = RandomAccessFileStream(open("./experimental/writing_short.txt", 'rb'))
+# b = bytearray(100)
+# print(b)
+# print(rfa.read(b, 0, 10), b)
+# print(f"Curr offset: {rfa.get_offset()}")
+# rfa.set_offset(20)
+# print(rfa.read(b, 0, 10), b)
+# print(f"Curr offset: {rfa.get_offset()}")
+# rfa.set_offset(0)
+# print(rfa.read(b, 0, 400), b)
+
+# b = bytearray(100)
+# hs = HTTP11Stream("http://i.imgur.com/z4d4kWk.jpg")
+# print(hs.read(b, 0, 10), b)
+# print(f"Curr offset: {hs.get_offset()}")
+# hs.set_offset(20)
+# print(hs.read(b, 0, 50), b)
+# print(f"Curr offset: {hs.get_offset()}")
+# hs.set_offset(1000)
+# print(hs.read(b, 0, 95), b)
+# print(f"Curr offset: {hs.get_offset()}")
