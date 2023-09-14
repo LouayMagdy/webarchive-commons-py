@@ -52,10 +52,15 @@ def dump_short(output_stream, input_stream):
 #     decoder.parse_header(orig_input_stream=simple_is, assume1st3=True)
 
 import mmap
+from streamcontext.RandomAccessFileStream import RandomAccessFileStream
 
-with open('./experimental/writing_short.txt', 'rb') as f_i:
-    f = mmap.mmap(f_i.fileno(), length=0, access=mmap.ACCESS_READ)
-    f.close()
-    print(f[:], f[0:0])
-    print(f.read(100))
-
+rfa = RandomAccessFileStream(open("./experimental/writing_short.txt", 'rb'))
+b = bytearray(100)
+print(b)
+print(rfa.read(b, 0, 10), b)
+print(f"Curr offset: {rfa.get_offset()}")
+rfa.set_offset(20)
+print(rfa.read(b, 0, 10), b)
+print(f"Curr offset: {rfa.get_offset()}")
+rfa.set_offset(0)
+print(rfa.read(b, 0, 400), b)

@@ -5,10 +5,10 @@ from abc import abstractmethod
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')))
 from streamcontext.Stream import Stream
 
+_DEFAULT_READ_SIZE = 4096
+
 
 class AbstractBufferingStream(Stream):  # implementing a bulk of methods except 3 methods left for the subclasses
-    _DEFAULT_READ_SIZE = 4096
-
     def __init__(self, offset: int = 0, read_size: int = _DEFAULT_READ_SIZE):
         if offset < 0:
             raise IndexError("Index Out of Bound Exception")
@@ -46,6 +46,8 @@ class AbstractBufferingStream(Stream):  # implementing a bulk of methods except 
         while length > 0:
             if self._buffer_remaining > 0:
                 amt_to_copy = min(length, self._buffer_remaining)
+                if amt_to_copy > len(b) - offset:
+                    raise IndexError("Index Out of Bound")
                 b[offset: offset + amt_to_copy] = self._buffer[self._buffer_cursor: self._buffer_cursor + amt_to_copy]
                 self._buffer_cursor += amt_to_copy
                 self._buffer_remaining -= amt_to_copy
@@ -78,7 +80,7 @@ class AbstractBufferingStream(Stream):  # implementing a bulk of methods except 
             self._at_eof = False
         elif self._offset > offset:  # seeking backward
             amt_to_reverse = self._offset - offset
-            if self._buffer_cursor > amt_to_reverse:  #within our buffer
+            if self._buffer_cursor > amt_to_reverse:  # within our buffer
                 self._buffer_cursor -= amt_to_reverse
                 self._buffer_remaining += amt_to_reverse
             else:  # beyond the buffer
