@@ -187,13 +187,34 @@ test = UsableURI(None)
 # print(test.parseFilename("http://archive.org/tmp/one.two/" + filename))
 # print(test.parseFilename("rsync://archive.org/tmp/one.two/" + filename))
 
-base = UsableURI("http://www.archive.org/a", True, "UTF-8")
-relative = UsableURI("//www.facebook.com/?href=http://www.archive.org/a", True, "UTF-8")
-print(relative.getScheme())
-print(relative.getAuthority())
+# base = UsableURI("http://www.archive.org/a", True, "UTF-8")
+# relative = UsableURI("//www.facebook.com/?href=http://www.archive.org/a", True, "UTF-8")
+# print(relative.getScheme())
+# print(relative.getAuthority())
+
+# NOT WORKING TESTS
 #
-# test2 = UsableURI(None, False, None, base, relative)
-# print(str(test2))
+## test2 = UsableURI(None, False, None, base, relative)
+## print(str(test2))
+#
+# END OF NOT WORKING TESTS
+
+
+# NOT WORKING TESTS
+#
+# tests = ["http://xn--x-4ga.dk", "xn--x-4ga.dk", "http://user:pass@xn--x-4ga.dk:8080", "http://user@xn--x-4ga.dk:8080", "http://xn--x-4ga.dk/foo/bar?query=q", "http://127.0.0.1/foo/bar?query=q"]
+# trues = ["http://øx.dk", "xn--x-4ga.dk", "http://user:pass@øx.dk:8080", "http://user@øx.dk:8080", "http://øx.dk/foo/bar?query=q", "http://127.0.0.1/foo/bar?query=q"]
+#
+##for i in range(len(tests)):
+##    result = str(UsableURI(tests[i], True, 'UTF-8').toUnicodeHostString())
+##    print(result)
+##    if not result == trues[i]:
+##        print("Error: " + tests[i] + " should be " + trues[i])
+##    print("===============")
+#
+# END OF NOT WORKING TESTS
+
+
 
 
 
