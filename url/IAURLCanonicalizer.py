@@ -43,44 +43,43 @@ class IAURLCanonicalizer(URLCanonicalizer, consts):
         self.rules: CanonicalizeRules = rules
         self.WWWN_PATTERN = re.compile("^www\\d*\\.")
 
-    # Helper function
-    def _strip_path_session_id(self, path):
-        """Strip the path and session ID from a URL."""
-        pattern = r"^https?://\w+/.*?"  # Match any URL
-        opt_patterns = [
-            (r"^https?://\w+/.+?\.aspx", r".aspx"),  # Strip path prefix
-            (r"^https?://\w+/\(([0-9a-zA-Z_]+)\)", r"?")  # Strip session ID
-        ]
-        stripped_path = ""
-        for opt_pattern in opt_patterns:
-            match = re.search(opt_pattern[0], path)
-            if match:
-                stripped_path += match.group(opt_pattern[1]) + "#"
-                break
-        return stripped_path[:-1]  # Remove the "#" at the end
+    # # Helper function
+    # def _strip_path_session_id(self, path):
+    #     """Strip the path and session ID from a URL."""
+    #     pattern = r"^https?://\w+/.*?"  # Match any URL
+    #     opt_patterns = [
+    #         (r"^https?://\w+/.+?\.aspx", r".aspx"),  # Strip path prefix
+    #         (r"^https?://\w+/\(([0-9a-zA-Z_]+)\)", r"?")  # Strip session ID
+    #     ]
+    #     stripped_path = ""
+    #     for opt_pattern in opt_patterns:
+    #         match = re.search(opt_pattern[0], path)
+    #         if match:
+    #             stripped_path += match.group(opt_pattern[1]) + "#"
+    #             break
+    #     return stripped_path[:-1]  # Remove the "#" at the end
 
     # Helper function
-    def _strip_query_session_id(self, query: str) -> str:
-        # Define the regular expression patterns for session ID tokens
-        pattern_list = [
-            {'pattern': r'(?i)^.*?(?:jsessionid=([0-9a-zA-Z]{32}))(?:(&amp;)?$)', 'start': 1, 'end': 2},
-            {'pattern': r'(?i)^.*?(?:phpsessid=([0-9a-zA-Z]{32}))(?:(&amp;)?$)', 'start': 1, 'end': 2},
-            {'pattern': r'(?i)^.*?(?:sid=([0-9a-zA-Z]{32}))(?:(&amp;)?$)', 'start': 1, 'end': 2},
-            {'pattern': r'(?i)^.*?(?:ASPSESSIONID ([a-zA-Z]{8})=(([a-zA-Z]{24}))(?:(&amp;)?$)', 'start': 1, 'end': 2},
-            {'pattern': r'(?i)^.*?(?:cfid=([^&]+)&cftoken=([^&]+))(?:(&amp;)?$)', 'start': 1, 'end': 2},
-        ]
-
-        # Use the regular expressions to extract the session ID token from the query string
-        matches = []
-        for pattern in pattern_list:
-            match = re.search(pattern['pattern'], query)
-            if match:
-                group = match.group(pattern['start'])
-                if group:
-                    # Remove the session ID token from the query string
-                    query = query[:match.start()] + query[match.end():]
-                    matches.append((pattern['start'], pattern['end'], group))
-        return query
+    # def _strip_query_session_id(self, query: str) -> str:
+    #     # Define the regular expression patterns for session ID tokens
+    #     pattern_list = [
+    #         {'pattern': r'(?i)^.*?(?:jsessionid=([0-9a-zA-Z]{32}))(?:(&amp;)?$)', 'start': 1, 'end': 2},
+    #         {'pattern': r'(?i)^.*?(?:phpsessid=([0-9a-zA-Z]{32}))(?:(&amp;)?$)', 'start': 1, 'end': 2},
+    #         {'pattern': r'(?i)^.*?(?:sid=([0-9a-zA-Z]{32}))(?:(&amp;)?$)', 'start': 1, 'end': 2},
+    #         {'pattern': r'(?i)^.*?(?:ASPSESSIONID ([a-zA-Z]{8})=(([a-zA-Z]{24}))(?:(&amp;)?$)', 'start': 1, 'end': 2},
+    #         {'pattern': r'(?i)^.*?(?:cfid=([^&]+)&cftoken=([^&]+))(?:(&amp;)?$)', 'start': 1, 'end': 2},
+    #     ]
+    #     # Use the regular expressions to extract the session ID token from the query string
+    #     matches = []
+    #     for pattern in pattern_list:
+    #         match = re.search(pattern['pattern'], query)
+    #         if match:
+    #             group = match.group(pattern['start'])
+    #             if group:
+    #                 # Remove the session ID token from the query string
+    #                 query = query[:match.start()] + query[match.end():]
+    #                 matches.append((pattern['start'], pattern['end'], group))
+    #     return query
 
     def canonicalize(self, url: HandyURL):
         if url.get_opaque() is not None:
