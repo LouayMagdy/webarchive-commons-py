@@ -60,6 +60,13 @@ class URLCodec:
                     buffer.write(bytes([b]))
             return buffer.getvalue()
 
+    def encode(self, p_array: bytearray):
+        return URLCodec.encodeUrl(WWW_FORM_URL, p_array)
+
+    def decode(self, p_array: bytearray):
+        return URLCodec.decodeUrl(p_array)
+
+
 ############# Testing #############
 
 # urlsafe = bitarray(256)
@@ -77,5 +84,3 @@ output2 = URLCodec.decodeUrl(my_input2)
 for b in output2:
     print(b & 0xFF)
 print(str(output2))
-
-

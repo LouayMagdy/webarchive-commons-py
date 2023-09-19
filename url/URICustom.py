@@ -201,8 +201,6 @@ class URICustom:
         self.protocol_charset = charset
         
 
-
-
 def check():
     b = bitarray(256)
     b.setall(False)
@@ -212,8 +210,7 @@ def check():
     print(b)
 
 
-
 uri = URICustom()
 # print(uri.ay7aga)
-print(URICustom._lax_rel_segment)
+# print(URICustom._lax_rel_segment)
 # check()

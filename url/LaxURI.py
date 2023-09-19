@@ -54,14 +54,20 @@ class LaxURI(URICustom):  # in java: extends URI
     # serial_version_UID = 5273922211722239537
     HTTP_SCHEME = ['h', 't', 't', 'p']
     HTTPS_SCHEME = ['h', 't', 't', 'p', 's']
+    lax_rel_segment = None
+    lax_abs_path = None
+    lax_rel_path = None
+    lax_query = None
 
-    def __init__(self, uri_string):
+    def __init__(self):
         super().__init__()
 
+    print(lax_query)
 
-    rel_segment = bitarray()
-    lax_rel_segment |= rel_segment
-    lax_rel_segment[ord(':')] = True
+
+    # rel_segment = bitarray()
+    # lax_rel_segment |= rel_segment
+    # lax_rel_segment[ord(':')] = True
 
 
 
@@ -70,24 +76,24 @@ class LaxURI(URICustom):  # in java: extends URI
 ############## TO BE CONTINUED WHEN I UNDERSTAND WHAT IT DOES! ######################
 
 
+lol = LaxURI()
 
-
-rel_segment = bitarray(256)
-rel_segment[b'a'] = 1
-rel_segment[b'b'] = 1
-rel_segment[b'c'] = 1
-rel_segment[b'd'] = 1
-
-lax_rel_segment = bytearray(256)
-lax_rel_segment[:] = rel_segment
-lax_rel_segment[b':'] = 1
-
-print(bool(lax_rel_segment[b'a']))
-print(bool(lax_rel_segment[b'b']))
-print(bool(lax_rel_segment[b'c']))
-print(bool(lax_rel_segment[b'd']))
-print(bool(lax_rel_segment[b':']))
-print(bool(lax_rel_segment[b'e']))
-
+# rel_segment = bitarray(256)
+# rel_segment[b'a'] = 1
+# rel_segment[b'b'] = 1
+# rel_segment[b'c'] = 1
+# rel_segment[b'd'] = 1
+#
+# lax_rel_segment = bytearray(256)
+# lax_rel_segment[:] = rel_segment
+# lax_rel_segment[b':'] = 1
+#
+# print(bool(lax_rel_segment[b'a']))
+# print(bool(lax_rel_segment[b'b']))
+# print(bool(lax_rel_segment[b'c']))
+# print(bool(lax_rel_segment[b'd']))
+# print(bool(lax_rel_segment[b':']))
+# print(bool(lax_rel_segment[b'e']))
+#
 
 
