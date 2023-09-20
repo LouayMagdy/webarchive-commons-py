@@ -199,7 +199,24 @@ def initialize(cls):
 class URICustom:
     def __init__(self, s: str = None, strict: bool = False, charset: str = None):
         self.protocol_charset = charset
-        
+        self._uri = None
+        self._is_opaque_part: bool = True
+        self._opaque: list
+
+    def _validate(self, component: list, generous: bitarray):
+        return self._validate_helper(component, 0, -1, generous)
+
+    def _validate_helper(self, component: list, s_offset: int, e_offset: int, generous: bitarray):
+        if e_offset == -1:
+            e_offset = len(component) - 1
+        for i in range(s_offset, e_offset+1):
+            if not generous.__getitem(component[i]):
+                return False
+        return True
+
+    def _get_raw_path(self):
+        return _opaque if _is_opaque_part else _path
+
 
 def check():
     b = bitarray(256)
@@ -212,5 +229,5 @@ def check():
 
 uri = URICustom()
 # print(uri.ay7aga)
-# print(URICustom._lax_rel_segment)
+# print(URICustom._rel_segment)
 # check()

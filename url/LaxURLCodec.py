@@ -63,7 +63,7 @@ class LaxURLCodec(URLCodec):
     def __init__(self, encoding: str = "UTF-8"):
         super().__init__(encoding)
 
-    def decode_url_loose(self, bytes: bytearray):
+    def decode_url_loose(self, bytes):
         if bytes is None:
             return None
         else:

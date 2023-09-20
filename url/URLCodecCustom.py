@@ -79,8 +79,8 @@ class URLCodec:
 # print(str(output))
 
 
-my_input2 = bytearray([72, 101, 108, 108, 111, 43, 87, 111, 114, 108, 100])
-output2 = URLCodec.decodeUrl(my_input2)
-for b in output2:
-    print(b & 0xFF)
-print(str(output2))
+# my_input2 = bytearray([72, 101, 108, 108, 111, 43, 87, 111, 114, 108, 100])
+# output2 = URLCodec.decodeUrl(my_input2)
+# for b in output2:
+#     print(b & 0xFF)
+# print(str(output2))
