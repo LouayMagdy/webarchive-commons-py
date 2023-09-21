@@ -39,5 +39,6 @@ ResourceExtractor.py
                 GZIPMetaData.py  --------> ok
         RandomAccessFileStream.py --------> ok
             AbstractBufferingStream.py ---------> ok
-        HTTP!!Stream.py -------> ok
+        HTTP11Stream.py -------> ok
+        HDFSStream.py ---------> ok
         
