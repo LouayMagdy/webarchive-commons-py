@@ -54,6 +54,7 @@ def dump_short(output_stream, input_stream):
 import mmap
 from streamcontext.RandomAccessFileStream import RandomAccessFileStream
 from streamcontext.HTTP11Stream import HTTP11Stream
+from streamcontext.HDFSStream import HDFSStream
 
 # rfa = RandomAccessFileStream(open("./experimental/writing_short.txt", 'rb'))
 # b = bytearray(100)
@@ -65,6 +66,17 @@ from streamcontext.HTTP11Stream import HTTP11Stream
 # print(f"Curr offset: {rfa.get_offset()}")
 # rfa.set_offset(0)
 # print(rfa.read(b, 0, 400), b)
+
+# b = bytearray(610)
+# hdfs = HDFSStream("http://10.35.139.54:9870", "/text_files/text_1.txt")
+# print(b)
+# print(hdfs.read(b, 0, 100), b)
+# print(f"curr. offset: {hdfs.get_offset()}")
+# hdfs.set_offset(100)
+# print(hdfs.read(b, 100, 100), b)
+# print(f"curr. offset: {hdfs.get_offset()}")
+# hdfs.set_offset(0)
+# print(hdfs.read(b, 0, 610), b)
 
 # b = bytearray(100)
 # hs = HTTP11Stream("http://i.imgur.com/z4d4kWk.jpg")
@@ -78,21 +90,20 @@ from streamcontext.HTTP11Stream import HTTP11Stream
 # print(f"Curr offset: {hs.get_offset()}")
 
 
-with open("./experimental/writing_short.txt", 'rb') as f_i:
-    file_name = os.path.basename(f_i.name)
-    print(file_name)
-
-from urllib.parse import urlparse
-
-url = 'http://10.0.0.1:8080/path/to/file.txt'
-parsed_url = urlparse(url)
-scheme = parsed_url.scheme
-netloc = parsed_url.netloc
-path = parsed_url.path
-filename = path.split('/')[-1]
-print('Scheme:', scheme)
-print('Netloc:', netloc)
-print('Path:', path)
-print('Filename:', filename)
-
-
+# with open("./experimental/writing_short.txt", 'rb') as f_i:
+#     file_name = os.path.basename(f_i.name)
+#     print(file_name)
+#
+# from urllib.parse import urlparse
+#
+# url = 'http://10.0.0.1:8080/path/to/file.txt'
+# url = "http://i.imgur.com/z4d4kWk.jpg"
+# parsed_url = urlparse(url)
+# scheme = parsed_url.scheme
+# netloc = parsed_url.netloc
+# path = parsed_url.path
+# filename = path.split('/')[-1]
+# print('Scheme:', scheme)
+# print('Netloc:', netloc)
+# print('Path:', path)
+# print('Filename:', filename)

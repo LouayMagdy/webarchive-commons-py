@@ -31,7 +31,8 @@ class EnvelopedResourceFile:
             producer = GZIPResourceContainer(series)
             return producer if not self._resource_factory else TransformingResourceProducer(producer,
                                                                                         self._resource_factory)
-    def get_resource_producer(self, is_gz: bool = False,file = None, hdfs_file_url_path: str = None, url: str= None, offset: int = 0):
+    def get_resource_producer(self, is_gz: bool = False,file = None, hdfs_file_url_path: str = None, url: str= None,
+                              offset: int = 0):
         if file:
             stream = RandomAccessFileStream(file)
             if offset > 0:

@@ -12,6 +12,7 @@ MAX_TO_READ=1024
 class HDFSStream(AbstractBufferingStream):
 
     def __init__(self, server_url: str, file_path: str, offset: int = 0):
+        super().__init__(offset=offset)
         self.client = InsecureClient(server_url)
         self.file_size = self.client.status(file_path)['length']
         self.file_path = file_path
