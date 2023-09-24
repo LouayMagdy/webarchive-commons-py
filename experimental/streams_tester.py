@@ -76,3 +76,23 @@ from streamcontext.HTTP11Stream import HTTP11Stream
 # hs.set_offset(1000)
 # print(hs.read(b, 0, 95), b)
 # print(f"Curr offset: {hs.get_offset()}")
+
+
+with open("./experimental/writing_short.txt", 'rb') as f_i:
+    file_name = os.path.basename(f_i.name)
+    print(file_name)
+
+from urllib.parse import urlparse
+
+url = 'http://10.0.0.1:8080/path/to/file.txt'
+parsed_url = urlparse(url)
+scheme = parsed_url.scheme
+netloc = parsed_url.netloc
+path = parsed_url.path
+filename = path.split('/')[-1]
+print('Scheme:', scheme)
+print('Netloc:', netloc)
+print('Path:', path)
+print('Filename:', filename)
+
+

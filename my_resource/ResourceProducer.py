@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 import sys
 import os
 
@@ -6,7 +6,7 @@ sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__
 from my_resource.Resource import Resource
 
 
-class ResourceProducer:
+class ResourceProducer(ABC):
     @abstractmethod
     def get_next(self) -> Resource | None:
         pass

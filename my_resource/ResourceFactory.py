@@ -1,7 +1,7 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 
 
-class ResourceFactory:
+class ResourceFactory(ABC):
     @abstractmethod
     def get_resource(self, input_stream, parent_meta_data, container):
         """

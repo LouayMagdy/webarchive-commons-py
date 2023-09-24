@@ -1,6 +1,6 @@
 ResourceExtractor.py
-    ResourceProducer.py
-    EnvelopedResourceFile.py
+    ResourceProducer.py --------------> ok
+    EnvelopedResourceFile.py ---------> ok ### some signatures changed
         ResourceFactory.py ------------> ok ### to use input and output stream, look at ./experimental/stream_tester.py
             ResourceContainer.py ----------------> ok
             MetaData.py --------------------> ok

@@ -38,8 +38,13 @@ class HDFSStream(AbstractBufferingStream):
         return
 
     def do_seek(self, offset: int):
-        self.cursor_pos = offset
-        self.input_stream = self.client.read(self.file_path, offset, MAX_TO_READ)
+        try:
+            if offset < 0:
+                raise IndexError("Index Out of Bound Exception")
+            self.cursor_pos = offset
+            self.input_stream = self.client.read(self.file_path, offset, MAX_TO_READ)
+        except Exception as e:
+            raise IOError() from e
 
 # s = HDFSStream("http://10.35.139.54:9870", "/text_files/text_1.txt")
 # b = bytearray(608)
