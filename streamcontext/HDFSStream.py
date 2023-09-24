@@ -6,7 +6,8 @@ sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__
 
 from streamcontext.AbstractBufferingStream import AbstractBufferingStream, _DEFAULT_READ_SIZE
 
-MAX_TO_READ = 4096
+MAX_TO_READ=1024
+
 
 class HDFSStream(AbstractBufferingStream):
 
@@ -20,32 +21,31 @@ class HDFSStream(AbstractBufferingStream):
     def do_read(self, b: bytearray, offset: int, length: int) -> int:
         if length > len(b) - offset:
             raise IOError('Index out of bound Exception')
-        if self.cursor_pos >= self.file_size:
+        if self.cursor_pos >= self.file_size or length <= 0:
             return -1
-        sum_read = 0
+        sum_read, len_data = 0, 0
         with self.input_stream as _is:
-            while length > 0:
-                read_data = _is.read(length)
-                len_data = len(read_data)
-                b[offset: offset + len_data] = read_data[:]
-                length -= len_data
-                sum_read += len_data
-                if not len_data and self.cursor_pos < self.file_size:
-                    self.cursor_pos += MAX_TO_READ
-                    self.do_seek(self.cursor_pos)
-                elif not len_data and self.cursor_pos >= self.file_size:
-                    break
+            read_data = _is.read(min(length, MAX_TO_READ))
+            len_data = len(read_data)
+            b[offset: offset + len_data] = read_data[:]
+            sum_read += len_data
+        self.do_seek(self.cursor_pos + len_data)
+        if MAX_TO_READ <= length and self.cursor_pos < self.file_size:
+            sum_read += max(self.do_read(b, offset + len_data, length - len_data), 0)
         return sum_read
 
     def do_close(self):
         return
+
     def do_seek(self, offset: int):
+        self.cursor_pos = offset
         self.input_stream = self.client.read(self.file_path, offset, MAX_TO_READ)
 
 # s = HDFSStream("http://10.35.139.54:9870", "/text_files/text_1.txt")
-# b = bytearray(500)
-# print(s.do_read(b, 0, len(b)))
-# print(b)
-# s.do_seek(500)
-# print(s.do_read(b, 0, len(b)))
-# print(b[:108])
+# b = bytearray(608)
+# print(s.do_read(b, 0, 500))
+# print(b[:500])
+# print(s.do_read(b, 500, 100))
+# print(b[:600])
+# print(s.do_read(b, 600, 8))
+# print(b[:])
