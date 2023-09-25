@@ -16,6 +16,7 @@ for attr in attrs:
         continue
     count += 1
     my_dict.__setitem__(attr[0], attr[2])
+
 with open("./experimental/my_dict.json", "w") as f:
     json.dump(my_dict, f, indent=4)
 print(count)

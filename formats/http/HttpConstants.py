@@ -1,4 +1,4 @@
-{
+HttpConstants = {
     "UTF8": "UTF-8",
     "CR": "13",
     "LF": "10",
@@ -32,3 +32,4 @@
     "METHOD_DELETE_STRING": "DELETE",
     "METHOD_CONNECT_STRING": "CONNECT"
 }
+

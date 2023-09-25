@@ -41,4 +41,16 @@ ResourceExtractor.py
             AbstractBufferingStream.py ---------> ok
         HTTP11Stream.py -------> ok
         HDFSStream.py ---------> ok
-        
+    ExtractorOutput.py ---------> ok
+    ProducerUtils.py
+        WARCFile.py
+            WARCResourceFactory.py
+                HttpResponseParser.py
+                    HttpResponseMessageParser.py
+                        HttpMessageParser.py ----------------> ok
+                            HttpConstants.py ----------------> ok
+                            HttpParseException.py -----------> ok
+                        HttpResponseMessage.py --------------> ok
+                            HttpMessage.py ------------------> ok
+                            HttpResponseMessageObserver.py ----> ok
+                    HttpHeaderParser.py

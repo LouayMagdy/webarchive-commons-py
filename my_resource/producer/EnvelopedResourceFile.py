@@ -17,7 +17,7 @@ from streamcontext.HDFSStream import HDFSStream
 
 
 class EnvelopedResourceFile:
-    def __init__(self, resource_factory: ResourceFactory):
+    def __init__(self, resource_factory: ResourceFactory = None):
         self._resource_factory = resource_factory
         self._strict = True
         self._start_offset = 0
