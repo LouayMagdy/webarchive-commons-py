@@ -75,6 +75,7 @@ class LaxURI(URICustom):  # in java: extends URI
 
     def __init__(self):  # in java: multiple constructors are made, and will be made here JUST if needed!
         super().__init__()
+        self.uri = URICustom()
 
     def get_uri(self) -> str:
         return None if self._uri is None else LaxURI.decode(self._uri, LaxURI.get_protocol_charset())
@@ -100,15 +101,15 @@ class LaxURI(URICustom):  # in java: extends URI
         return generous
 
     def _parse_authority(self, original: str, escaped: bool):
-        # Decode the original string if it is escaped
-        if escaped:
-            original = unquote(original)
-        # Parse the URI and get the authority component
-        parsed_uri = urlparse(original)
-        authority = parsed_uri.netloc
+        self.uri.parseAuthority(original, escaped)
 
     def _set_uri(self):
-        pass
+        if self._scheme is not None:
+            if len(self._scheme) == 4 and self._scheme == self.HTTP_SCHEME:
+                self._scheme = self.HTTP_SCHEME
+            elif len(self._scheme) == 5 and self._scheme == self.HTTPS_SCHEME:
+                self._scheme = self.HTTPS_SCHEME
+        self.setURI()
 
     def _parse_uri_reference(self, original: str, escaped: bool):
         pass

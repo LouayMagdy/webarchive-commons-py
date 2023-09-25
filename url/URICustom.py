@@ -290,9 +290,9 @@ class URICustom:
     def __init__(self, s: str = None, strict: bool = False, charset: str = None):
         self._authority = None
         self.protocol_charset = charset
-        self._uri = None
+        self._uri:list = []
         self._is_opaque_part: bool = True
-        self._opaque: list
+        self._opaque:list = []
         self.authority = None
         self._host = None
         self._is_reg_name: bool = False
@@ -301,6 +301,13 @@ class URICustom:
         self._is_IPv4address: bool = False
         self._is_IPv6reference: bool = False
         self._port: int = -1
+        self._scheme: list = []
+        self.is_net_path: bool
+        self._is_opaque_part: bool
+        self._path: list = []
+        self._query: list = []
+        self.hash = 0
+        self._is_net_path: bool = False
 
     def parseAuthority(self, original, escaped):
         # Reset flags
@@ -376,7 +383,6 @@ class URICustom:
             # Set flag
             self._is_server = True
 
-
     def _validate(self, component: list, generous: bitarray):
         return self._validate_helper(component, 0, -1, generous)
 
@@ -388,6 +394,36 @@ class URICustom:
                 return False
         return True
 
+    def setURI(self):   # to be revised A LOT
+        # Initialize a string buffer
+        buf = []
+
+        # Construct the URI
+        # ^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?
+
+        if self._scheme is not None:
+            buf.append(self._scheme + ':')
+
+        if self._is_net_path:
+            buf.append('//')
+            if self._authority is not None:
+                buf.append(self._authority)
+
+        if self._opaque is not None and self._is_opaque_part:
+            buf.append(self._opaque)
+        elif self._path is not None:
+            # _is_hier_part or _is_relativeURI
+            if len(self._path) != 0:
+                buf.append(self._path)
+
+        if self._query is not None:
+            buf.append('?' + self._query)
+
+        # Ignore the fragment identifier
+
+        # Convert the constructed URI to a character array
+        self._uri = list(''.join(buf))
+        self.hash = 0  # Assuming hash is an instance variable
 
     # def _get_raw_path(self):
     #     return _opaque if _is_opaque_part else _path
