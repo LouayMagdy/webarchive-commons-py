@@ -46,7 +46,7 @@ ResourceExtractor.py
         WARCFile.py
             WARCResourceFactory.py
                 HttpResponseParser.py
-                    HttpResponseMessageParser.py
+                    HttpResponseMessageParser.py ---------------> ok
                         HttpMessageParser.py ----------------> ok
                             HttpConstants.py ----------------> ok
                             HttpParseException.py -----------> ok

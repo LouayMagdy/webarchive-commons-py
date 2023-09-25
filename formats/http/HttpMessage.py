@@ -9,7 +9,7 @@ class HttpMessage:
     def __init__(self):
         self.version = HttpConstants.get("VERSION_0")
         self.bytes = -1
-        self.is_corrupt = None
+        self.is_corrupt = False
 
     def get_version(self) -> int:
         return self.version

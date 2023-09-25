@@ -27,3 +27,5 @@ while 1:
 print(sys.maxsize, 1 << 64 - 1, 2 ** 63 - 1)
 
 print(bytearray([65, 66, 67]).decode('utf-8').lower())
+
+print(int("60A"))

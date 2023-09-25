@@ -107,3 +107,14 @@ from streamcontext.HDFSStream import HDFSStream
 # print('Netloc:', netloc)
 # print('Path:', path)
 # print('Filename:', filename)
+
+
+from formats.http.HttpResponseMessageParser import HttpResponseMessageParser
+from formats.http.HttpResponseMessage import HttpResponseMessage
+with open("./experimental/writing_short.txt", 'wb') as f_o:
+    f_o.write(b'HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<html><body>Hello, world!</body></html>')
+with open("./experimental/writing_short.txt", 'rb') as f_i:
+    parser = HttpResponseMessageParser()
+    # parser.strict = True
+    print(parser.parse_message(f_i).to_string())
+
