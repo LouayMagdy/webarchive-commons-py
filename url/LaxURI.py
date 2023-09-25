@@ -56,14 +56,16 @@ def decode(component: list, charset: str):
     if component is None:
         raise ValueError("Component array of chars may not be null")
 
-    component = "".join(component)
+    component = "".join(component)  # converting component from list of chars to string
     if component is None:
         raise ValueError("Component array of chars may not be null")
-    rawdata: bytearray = lax_url_codec.decode_url_loose(component.encode('ascii'))  # expected bytearray, got bytes instead
+    rawdata: bytearray = lax_url_codec.decode_url_loose(
+        component.encode('ascii'))  # expected bytearray, got bytes instead
     return rawdata.decode(charset)
 
 
 lax_url_codec = LaxURLCodec()
+
 
 @initialize
 class LaxURI(URICustom):  # in java: extends URI
@@ -105,6 +107,11 @@ class LaxURI(URICustom):  # in java: extends URI
         parsed_uri = urlparse(original)
         authority = parsed_uri.netloc
 
+    def _set_uri(self):
+        pass
+
+    def _parse_uri_reference(self, original: str, escaped: bool):
+        pass
 
 
 print(LaxURI._lax_rel_segment)

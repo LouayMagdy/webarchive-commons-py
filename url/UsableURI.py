@@ -14,7 +14,6 @@ class UsableURI(LaxURI):
         #     super().__init__(base, relative)
         #     self.normalize()
 
-
         if uri is not None:
             self.uri = urlparse(uri)
         self.cachedHost = None
