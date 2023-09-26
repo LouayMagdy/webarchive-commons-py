@@ -54,3 +54,16 @@ ResourceExtractor.py
                             HttpMessage.py ------------------> ok
                             HttpResponseMessageObserver.py ----> ok
                     HttpHeaderParser.py
+                        StartParseState.py -------------> ok
+                            ParseState.py ------------> ok
+                            NameParseState.py ---------------> ok
+                                PostNameParseState.py ------------> ok
+                                PostColonParseState.py ---------> ok
+                                    ValuePostCRParseState.py --------> ok
+                                    LineStartParseState.py -------> ok
+                                        PostBlankCRParseState.py ----> ok
+                                        EndParseState.py ------------> ok
+                                    ValueParseState.py ---------------> ok
+                                        ValuePostLWSPParseState.py ---------> ok
+                                LAXLineEatParseState.py -------------> ok
+
