@@ -102,6 +102,8 @@ class LaxURI(URICustom):  # in java: extends URI
 
     def _parse_authority(self, original: str, escaped: bool):
         self.uri.parseAuthority(original, escaped)
+        if self.uri._host is not None and self.uri._authority is not None and len(self.uri._host) == len(self.uri._authority):
+            self.uri._host = self.uri._authority
 
     def _set_uri(self):
         if self._scheme is not None:
@@ -112,7 +114,97 @@ class LaxURI(URICustom):  # in java: extends URI
         self.setURI()
 
     def _parse_uri_reference(self, original: str, escaped: bool):
-        pass
+        if original is None:
+            raise Exception("URI-Reference required")
+        tmp: str = original.strip()
+        length = len(tmp)
+        if length > 0:
+            first_delimiter = [tmp[0]]
+            if self.validate(first_delimiter, URICustom._delims):
+                if length >= 2:
+                    last_delimiter = [tmp[length - 1]]
+                    if self.validate(last_delimiter, URICustom._delims):
+                        tmp = tmp[1:length - 1]
+                        length = length - 2
+
+        from_idx = 0
+        is_started_from_path = False
+        at_colon = tmp.index(':')
+        at_slash = tmp.index('/')
+        if not tmp.startswith("//") and (at_colon <= 0 or (0 <= at_slash < at_colon)):
+            is_started_from_path = True
+
+        at_idx = self.uri.index_first_of(tmp, "/?#" if is_started_from_path else ":/?#", from_idx)
+        if at_idx == -1:
+            at_idx = 0
+
+        if 0 < at_idx < length and tmp[at_idx] == ':':
+            target = tmp[0:at_idx].lower()
+            if self.uri._validate(target, URICustom.scheme):
+                self._scheme = target
+                from_idx = at_idx + 1
+                at_idx += 1
+            else:
+                # IA CHANGE: do nothing; allow interpretation as URI with later colon in other syntactical component
+                pass
+
+        self.uri._is_net_path = self.uri._is_abs_path = self.uri._is_rel_path = self.uri._is_hier_part = False
+        if 0 <= at_idx < length and tmp[at_idx] == '/':
+            self.uri._is_hier_part = True
+            if at_idx+2 < length and tmp[at_idx+1] == '/' and not is_started_from_path:
+                next_idx: int = self.uri.index_first_of(tmp, "/?#", at_idx+2)
+                if next_idx == -1:
+                    next_idx = at_idx+2 if len(tmp[at_idx+2:]) == 0 else len(tmp)
+                self._parse_authority(tmp[at_idx+2:next_idx], escaped)
+                from_idx = at_idx = next_idx
+                self.uri._is_net_path = True
+            if from_idx == at_idx:
+                self.uri._is_abs_path = True
+
+        if from_idx < length:
+            next_idx = self.uri.index_first_of(tmp, "?#", from_idx)
+            if next_idx == -1:
+                next_idx = len(tmp)
+            if not self.uri._is_abs_path:
+                if not escaped and self.uri.prevalidate(tmp[from_idx:next_idx], URICustom._disallowed_rel_path) or \
+                        escaped and self.uri.validate(tmp[from_idx:next_idx], URICustom._rel_path):
+                    self.uri._is_rel_path = True
+                elif not escaped and self.uri.prevalidate(tmp[from_idx, next_idx], URICustom._disallowed_opaque_part) or \
+                    escaped and self.uri.validate(tmp[from_idx:next_idx], URICustom._opaque_part):
+                    self.uri._is_opaque_part = True
+                else:
+                    self.uri._path = None
+            s = tmp[from_idx: next_idx]
+            if escaped:
+                self.uri.set_raw_path(s)
+            else:
+                self.uri.set_path(s)
+            at_idx = next_idx
+
+        charset: str = self.uri.get_protocol_charset()
+        if 0 <= at_idx and at_idx+1 < length and tmp[at_idx] == '?':
+            next_idx2 = tmp.index('#', at_idx+1)
+            if next_idx2 == -1:
+                next_idx2 = len(tmp)
+            if escaped:
+                self.uri._query = tmp[at_idx+1:next_idx2]
+                if not self.uri._validate(self.uri._query, URICustom.query):
+                    raise Exception("Invalid query")
+                else:
+                    self.uri._query = self.uri.encode(tmp[at_idx+1:next_idx2], URICustom._allowed_query, charset)
+                at_idx = next_idx2
+
+        if 0 <= at_idx and at_idx+1 <= length and tmp[at_idx] == '#':
+            if at_idx+1 == length:
+                self.uri._fragment = ""
+            else:
+                self.uri._fragment = tmp[at_idx+1:] if escaped else self.uri.encode(tmp[at_idx+1:], URICustom._allowed_fragment, charset)
+        self.uri.setURI()
+
+
+
+
+
 
 
 print(LaxURI._lax_rel_segment)

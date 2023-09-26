@@ -1,6 +1,8 @@
 from bitarray import bitarray
 from urllib.parse import urlparse, quote, urlsplit, urlunsplit, urlunparse
 import urllib.parse
+from URLCodec import URLCodec
+import logging
 import codecs
 
 
@@ -30,7 +32,7 @@ def initialize_uric(cls):
 
 
 def initialize_query(cls):
-    cls._query = cls._uric
+    cls.query = cls._uric
 
 
 def initialize_abs_path(cls):
@@ -247,6 +249,85 @@ def initialize_allowed_userinfo(cls):
     cls._allowed_user_info[ord('%')] = False
 
 
+def initialize_delims(cls):
+    cls._delims = bitarray(256)
+    cls._delims.setall(False)
+    cls._delims[ord('<')] = True
+    cls._delims[ord('>')] = True
+    cls._delims[ord('#')] = True
+    cls._delims[ord('%')] = True
+    cls._delims[ord('"')] = True
+    return cls
+
+
+def initialize_scheme(cls):
+    cls.scheme = bitarray(256)
+    cls.scheme.setall(False)
+    cls.scheme[:] |= cls._alpha[:]
+    cls.scheme[:] |= cls._digit[:]
+    cls.scheme[ord('+')] = True
+    cls.scheme[ord('-')] = True
+    cls.scheme[ord('.')] = True
+    return cls
+
+
+def initialize_disallowed_rel_path(cls):
+    cls._disallowed_rel_path = bitarray(256)
+    cls._disallowed_rel_path.setall(False)
+    cls._disallowed_rel_path[:] |= cls._uric[:]
+    cls._disallowed_rel_path[:] &= ~cls._rel_path[:]
+    return cls
+
+
+def initialize_uric_no_slash(cls):
+    cls._uric_no_slash = bitarray(256)
+    cls._uric_no_slash.setall(False)
+    cls._uric_no_slash[:] |= cls._unreserved[:]
+    cls._uric_no_slash[:] |= cls._escaped[:]
+    cls._uric_no_slash[ord(';')] = True
+    cls._uric_no_slash[ord('?')] = True
+    cls._uric_no_slash[ord(':')] = True
+    cls._uric_no_slash[ord('@')] = True
+    cls._uric_no_slash[ord('&')] = True
+    cls._uric_no_slash[ord('=')] = True
+    cls._uric_no_slash[ord('+')] = True
+    cls._uric_no_slash[ord('$')] = True
+    cls._uric_no_slash[ord(',')] = True
+    return cls
+
+
+def initialize_opaque_part(cls):
+    cls._opaque_part = bitarray(256)
+    cls._opaque_part.setall(False)
+    cls._opaque_part[:] |= cls._uric_no_slash[:]
+    cls._opaque_part[:] |= cls._uric[:]
+    return cls
+
+
+def initialize_disallowed_opaque_part(cls):
+    cls._disallowed_opaque_part = bitarray(256)
+    cls._disallowed_opaque_part.setall(False)
+    cls._disallowed_opaque_part[:] |= cls._uric[:]
+    cls._disallowed_opaque_part[:] &= ~cls._opaque_part[:]
+    return cls
+
+
+def initialize_allowed_query(cls):
+    cls._allowed_query = bitarray(256)
+    cls._allowed_query.setall(False)
+    cls._allowed_query[:] |= cls._uric[:]
+    cls._allowed_query[ord('%')] = False
+    return cls
+
+
+def initialize_allowed_fragment(cls):
+    cls._allowed_fragment = bitarray(256)
+    cls._allowed_fragment.setall(False)
+    cls._allowed_fragment[:] |= cls._uric[:]
+    cls._allowed_fragment[ord('%')] = False
+    return cls
+
+
 def initialize(cls):
     initialize_alpha(cls)
     initialize_digit(cls)
@@ -282,6 +363,16 @@ def initialize(cls):
     initialize_userinfo(cls)
     initialize_allowed_userinfo(cls)
 
+    initialize_uric_no_slash(cls)
+    initialize_opaque_part(cls)
+
+    initialize_delims(cls)
+    initialize_scheme(cls)
+    initialize_disallowed_rel_path(cls)
+    initialize_disallowed_opaque_part(cls)
+    initialize_allowed_query(cls)
+    initialize_allowed_fragment(cls)
+
     return cls
 
 
@@ -291,7 +382,6 @@ class URICustom:
         self._authority = None
         self.protocol_charset = charset
         self._uri:list = []
-        self._is_opaque_part: bool = True
         self._opaque:list = []
         self.authority = None
         self._host = None
@@ -300,14 +390,19 @@ class URICustom:
         self._is_hostname: bool = False
         self._is_IPv4address: bool = False
         self._is_IPv6reference: bool = False
+        self._is_opaque_part: bool = True
         self._port: int = -1
         self._scheme: list = []
-        self.is_net_path: bool
-        self._is_opaque_part: bool
+        self.is_net_path: bool = False
+        self.is_abs_path: bool = False
+        self.is_rel_path: bool = False
+        self.is_hier_part: bool = False
+        self._is_opaque_part: bool = False
         self._path: list = []
         self._query: list = []
         self.hash = 0
-        self._is_net_path: bool = False
+        self._fragment: list = []
+        self.LOG = logging.getLogger(__name__)
 
     def parseAuthority(self, original, escaped):
         # Reset flags
@@ -404,7 +499,7 @@ class URICustom:
         if self._scheme is not None:
             buf.append(self._scheme + ':')
 
-        if self._is_net_path:
+        if self.is_net_path:
             buf.append('//')
             if self._authority is not None:
                 buf.append(self._authority)
@@ -427,6 +522,106 @@ class URICustom:
 
     # def _get_raw_path(self):
     #     return _opaque if _is_opaque_part else _path
+
+    def index_first_of(self, s: str, delims: str, offset: int):
+        if s is None or len(s) == 0:
+            return -1
+        if delims is None or len(delims) == 0:
+            return -1
+        if offset < 0:
+            offset = 0
+        elif offset > len(s):
+            return -1
+        mini: int = len(s)
+        for i in range(len(delims)):
+            at_idx = s.index(delims[i], offset)
+            if mini > at_idx >= 0:
+                mini = at_idx
+        return -1 if mini == len(s) else mini
+
+    def prevalidate(self, component: str, disallowed: bitarray):
+        if component is None:
+            return False  # undefined
+        for i in range(len(component)):
+            if disallowed.__getitem__(component[i]):
+                return False
+        return True
+
+    def _remove_fragment_identifier(self, component):
+        if component is None:
+            return None
+        last_index = component.index('#')
+        if last_index != -1:
+            component = component[:last_index]
+        return component
+
+    def set_raw_path(self, escaped_path: str):
+        if escaped_path is None or len(escaped_path) == 0:
+            self._path = self._opaque = escaped_path
+            self.setURI()
+            return
+        escaped_path = self._remove_fragment_identifier(escaped_path)
+        if self.is_net_path or self.is_abs_path:
+            if not escaped_path[0] == '/':
+                raise Exception("not absolute path")
+            if not self._validate(escaped_path, URICustom._abs_path):
+                raise Exception("escaped bsolute path not valid")
+            self._path = escaped_path
+        elif self.is_rel_path:
+            at_idx = self.index_first_of(escaped_path, "/", 0)
+            if at_idx == 0:
+                raise Exception("incorrect path")
+            if at_idx > 0 and not self._validate_helper(escaped_path, 0, at_idx-1, URICustom._rel_segment) and \
+                not self._validate_helper(escaped_path, at_idx, -1, URICustom._abs_path) or \
+                at_idx < 0 and not self._validate_helper(escaped_path, 0, -1, URICustom._rel_segment):
+                raise Exception("escaped relative path not valid")
+            self._path = escaped_path
+        elif self._is_opaque_part:
+            if not URICustom._uric_no_slash.__getitem__(escaped_path[0]) and not self._validate_helper(escaped_path, 1, -1, URICustom._uric):
+                raise Exception("escaped opaque part not valid")
+            self._opaque = escaped_path
+        else:
+            raise Exception("incorrect path")
+        self.setURI()
+
+    def set_path(self, path: str):
+        if path is None or len(path) == 0:
+            self._path = self._opaque = path
+            self.setURI()
+            return
+        charset = self.get_protocol_charset()
+        if self.is_net_path or self.is_abs_path:
+            self._path = self.encode(path, URICustom._allowed_abs_path, charset)
+        elif self.is_rel_path:
+            pass  # to be continued later!
+
+
+    def get_protocol_charset(self):
+        if self.protocol_charset is not None:
+            return self.protocol_charset
+        return "UTF-8"
+
+    def __getBytes(self, data, charset):
+        if data is None:
+            raise ValueError("data may not be null")
+        if charset is None or len(charset) == 0:
+            raise ValueError("charset may not be null or empty")
+        try:
+            return data.encode(charset)
+        except LookupError:
+            if self.LOG.isEnabledFor(logging.WARNING):
+                self.LOG.warning("Unsupported encoding: {}. System encoding used.".format(charset))
+            return data.encode()
+
+    def encode(self, original: str, allowed: bitarray, charset: str):
+        if original is None:
+            raise Exception("original string may not be null")
+        if allowed is None:
+            raise Exception("allowed bitset may not be null")
+        url_codec = URLCodec()
+        rawdata = url_codec.encode_url(allowed, self.__getBytes(original, charset))
+        return rawdata.decode('ascii')
+
 
 
 def check():
