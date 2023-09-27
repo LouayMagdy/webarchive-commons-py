@@ -1,14 +1,28 @@
 from LaxURI import LaxURI
 import re
 from urllib.parse import urlparse, urlunparse
+from URICustom import URICustom
+import idna
 
 
+def initialize_hostname2(cls):
+    URICustom._hostname[ord('_')] = True
+    return cls
+
+
+def initialize(cls):
+    initialize_hostname2(cls)
+    return cls
+
+
+@initialize
 class UsableURI(LaxURI):
     MAX_URL_LENGTH = 2083
     MASSAGEHOST_PATTERN = "^www\\d*\\."
 
     def __init__(self, uri=None, escaped=False, charset=None):
         super().__init__()
+        self.normalize()
 
         # if base is not None and relative is not None:
         #     super().__init__(base, relative)
@@ -16,27 +30,90 @@ class UsableURI(LaxURI):
 
         if uri is not None:
             self.uri = urlparse(uri)
+        else:
+            self.uri = URICustom()
         self.cachedHost = None
         self.cachedEscapedURI = None
         self.cachedString = None
         self.cachedAuthorityMinusUserinfo = None
         self.surtForm = None
+        if charset is None:
+            self.charset = self.uri.get_protocol_charset()
         if charset is not None:
             # Handle character encoding here if needed
             pass
 
     def resolve(self, uri, escaped=False, charset=None):
-        base_uri = self.uri
-        resolved_uri = urlparse(uri)
-        if escaped and not resolved_uri.netloc:
-            # Handle escaped URI here if needed
-            pass
-        return UsableURI(urlunparse(resolved_uri._replace(scheme=base_uri.scheme, netloc=base_uri.netloc, path=resolved_uri.path)))
+        if charset is None:
+            charset = self.charset
+        return UsableURI(uri, escaped, charset)
+        # base_uri = self.uri
+        # resolved_uri = urlparse(uri)
+        # if escaped and not resolved_uri.netloc:
+        #     # Handle escaped URI here if needed
+        #     pass
+        # return UsableURI(
+        #     urlunparse(resolved_uri._replace(scheme=base_uri.scheme, netloc=base_uri.netloc, path=resolved_uri.path)))
 
-    def equals(self, other):
-        if isinstance(other, UsableURI):
-            return str(self) == str(other)
-        return False
+    def equals(self, obj):
+        if obj == self:
+            return True
+        if not isinstance(URICustom, obj):
+            return False
+        another = URICustom(obj)
+        if not self._scheme == another._scheme:
+            return False
+        if not self._opaque == another._opaque:
+            return False
+        if not self._authority == another._authority:
+            return False
+        if not self._path == another._path:
+            return False
+        if not self._query == another._query:
+            return False
+        return True
+
+    def to_custom_string(self):
+        if self.cachedString is None:
+            self.cachedString = self.toString()
+            self.coalesceUriStrings()
+        return self.cachedString
+
+    def to_unicode_Host_string(self):
+        if not URICustom._hostname:
+            return self.toString()
+
+        try:
+            buf = []
+            if self._scheme is not None:
+                buf.append(self._scheme)
+                buf.append(':')
+            if self.is_net_path:
+                buf.append("//")
+                if self._authority is not None:
+                    if URICustom._userinfo is not None:
+                        buf.append(URICustom._userinfo)
+                        buf.append('@')
+                    buf.append(idna.decode(self.getHost()))
+                    if self._port >= 0:
+                        buf.append(':')
+                        buf.append(self._port)
+            if self._opaque is not None and self._is_opaque_part:
+                buf.append(self._opaque)
+            elif self._path is not None:
+                if len(self._path) != 0:
+                    buf.append(self._path)
+            if self._query is not None:
+                buf.append('?')
+                buf.append(self._query)
+            return ''.join(buf)
+        except RuntimeError as e:
+            raise RuntimeError(e)
+
+    # def equals(self, other):
+    #     if isinstance(other, UsableURI):
+    #         return str(self) == str(other)
+    #     return False
 
     def getHostBasename(self):
         if self.getReferencedHost() is None:
@@ -57,21 +134,29 @@ class UsableURI(LaxURI):
             return str(self)
         return str(self.uri)
 
-    def getEscapedURI(self):
+    def get_escaped_uri(self):
         if self.cachedEscapedURI is None:
-            self.cachedEscapedURI = str(self.uri)
+            self.cachedEscapedURI = self.getEscapedURI()
             self.coalesceUriStrings()
         return self.cachedEscapedURI
 
     def coalesceUriStrings(self):
-        if self.cachedString is not None and self.cachedEscapedURI is not None and len(self.cachedString) == len(self.cachedEscapedURI):
+        if self.cachedString is not None and self.cachedEscapedURI is not None and len(self.cachedString) == len(
+                self.cachedEscapedURI):
             self.cachedString = self.cachedEscapedURI
 
     def getHost(self):
         if self.cachedHost is None:
-            self.cachedHost = self.uri.hostname
-            self.coalesceHostAuthorityStrings()
+            if self._host is not None:
+                self.cachedHost = self.uri.hostname
+                self.coalesceHostAuthrityStrings()
         return self.cachedHost
+
+    def coalesceHostAuthorityStrings(self):
+        if self.cachedAuthorityMinusUserinfo is not None \
+                and self.cachedHost is not None \
+                and len(self.cachedHost) == len(self.cachedAuthorityMinusUserinfo):
+            self.cachedAuthorityMinusUserinfo = self.cachedHost
 
     def getReferencedHost(self):
         referenced_host = self.getHost()
@@ -97,25 +182,35 @@ class UsableURI(LaxURI):
         return self.cachedAuthorityMinusUserinfo
 
     def length(self):
-        return len(self.getEscapedURI())
+        return len(self.get_escaped_uri())
 
     def charAt(self, index):
-        return self.getEscapedURI()[index]
+        return self.get_escaped_uri()[index]
 
     def subSequence(self, start, end):
-        return self.getEscapedURI()[start:end]
+        return self.get_escaped_uri()[start:end]
 
     def compareTo(self, other):
-        return str(self).compare(other)
+        return self.get_escaped_uri().compare(other)
 
     @staticmethod
     def hasScheme(possible_url):
-        for c in possible_url:
+        result = False
+        for i in range(len(possible_url)):
+            c = possible_url[i]
             if c == ':':
-                return True
-            if c not in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ':
+                if i != 0:
+                    result = True
                 break
-        return False
+            if not URICustom.scheme.__getitem__(ord(c)):
+                break
+        return result
+        # for c in possible_url:
+        #     if c == ':':
+        #         return True
+        #     if c not in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ':
+        #         break
+        # return False
 
     @staticmethod
     def parseFilename(path_or_uri):
@@ -128,7 +223,6 @@ class UsableURI(LaxURI):
 
     def writeObject(self, stream):
         stream.writeUTF(self.toCustomString())
-
 
 
 # from LaxURI import LaxURI
@@ -167,53 +261,47 @@ class UsableURI(LaxURI):
 #         return result
 
 
-
-
-
-
 ###################### Testing ######################
 
 
 test = UsableURI(None)
 
-# print(test.hasScheme("http://www.archive.org"))
-# print(test.hasScheme("http:"))
-# print(test.hasScheme("ht/tp://www.archive.org"))
-# print(test.hasScheme("/tmp"))
-#
-# filename = "x.arc.gz"
-# print(test.parseFilename("/tmp/one.two/" + filename))
-# print(test.parseFilename("http://archive.org/tmp/one.two/" + filename))
-# print(test.parseFilename("rsync://archive.org/tmp/one.two/" + filename))
+print(test.hasScheme("http://www.archive.org"))
+print(test.hasScheme("http:"))
+print(test.hasScheme("ht/tp://www.archive.org"))
+print(test.hasScheme("/tmp"))
 
-# base = UsableURI("http://www.archive.org/a", True, "UTF-8")
-# relative = UsableURI("//www.facebook.com/?href=http://www.archive.org/a", True, "UTF-8")
-# print(relative.getScheme())
-# print(relative.getAuthority())
+filename = "x.arc.gz"
+print(test.parseFilename("/tmp/one.two/" + filename))
+print(test.parseFilename("http://archive.org/tmp/one.two/" + filename))
+print(test.parseFilename("rsync://archive.org/tmp/one.two/" + filename))
+
+base = UsableURI("http://www.archive.org/a", True, "UTF-8")
+relative = UsableURI("//www.facebook.com/?href=http://www.archive.org/a", True, "UTF-8")
+print(relative.getScheme())
+print(relative.getAuthority())
 
 # NOT WORKING TESTS
 #
-## test2 = UsableURI(None, False, None, base, relative)
-## print(str(test2))
+test2 = UsableURI(None, False, None)
+print(str(test2))
 #
 # END OF NOT WORKING TESTS
 
 
 # NOT WORKING TESTS
 #
-# tests = ["http://xn--x-4ga.dk", "xn--x-4ga.dk", "http://user:pass@xn--x-4ga.dk:8080", "http://user@xn--x-4ga.dk:8080", "http://xn--x-4ga.dk/foo/bar?query=q", "http://127.0.0.1/foo/bar?query=q"]
-# trues = ["http://øx.dk", "xn--x-4ga.dk", "http://user:pass@øx.dk:8080", "http://user@øx.dk:8080", "http://øx.dk/foo/bar?query=q", "http://127.0.0.1/foo/bar?query=q"]
+tests = ["http://xn--x-4ga.dk", "xn--x-4ga.dk", "http://user:pass@xn--x-4ga.dk:8080", "http://user@xn--x-4ga.dk:8080",
+         "http://xn--x-4ga.dk/foo/bar?query=q", "http://127.0.0.1/foo/bar?query=q"]
+trues = ["http://øx.dk", "xn--x-4ga.dk", "http://user:pass@øx.dk:8080", "http://user@øx.dk:8080",
+         "http://øx.dk/foo/bar?query=q", "http://127.0.0.1/foo/bar?query=q"]
 #
-##for i in range(len(tests)):
-##    result = str(UsableURI(tests[i], True, 'UTF-8').toUnicodeHostString())
-##    print(result)
-##    if not result == trues[i]:
-##        print("Error: " + tests[i] + " should be " + trues[i])
-##    print("===============")
+for i in range(len(tests)):
+    result = str(UsableURI(tests[i], True, 'UTF-8').toUnicodeHostString())
+    print(result)
+    if not result == trues[i]:
+        print("Error: " + tests[i] + " should be " + trues[i])
+    print("===============")
 #
 # END OF NOT WORKING TESTS
-
-
-
-
-
+test.resolve("blabla@bla")

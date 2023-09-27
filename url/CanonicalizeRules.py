@@ -1,7 +1,7 @@
 from CanonicalizerConstants import CanonicalizerConstants
 
 
-class CanonicalizeRules:
+class CanonicalizeRules(CanonicalizerConstants):
     def __init__(self):
         self.settings = [0] * CanonicalizerConstants.NUM_SETTINGS
 

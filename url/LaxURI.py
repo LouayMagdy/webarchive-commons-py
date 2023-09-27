@@ -34,7 +34,8 @@ def initialize_lax_rel_path(cls):
 def initialize_lax_query(cls):
     cls._lax_query = bitarray(256)
     cls._lax_query.setall(False)
-    cls._lax_query[:] |= cls._query[:]  # inherited from URICustom
+    # cls._lax_query[:] |= cls._query[:]  # inherited from URICustom
+    cls._lax_query[:] |= URICustom.query[:]
     cls._lax_query[ord('{')] = True
     cls._lax_query[ord('}')] = True
     cls._lax_query[ord('|')] = True

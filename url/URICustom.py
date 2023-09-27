@@ -271,6 +271,14 @@ def initialize_scheme(cls):
     return cls
 
 
+def initialize_rel_path(cls):
+    cls._rel_path = bitarray(256)
+    cls._rel_path.setall(False)
+    cls._rel_path[:] |= cls._rel_segment[:]
+    cls._rel_path[:] |= cls._abs_path[:]
+    return cls
+
+
 def initialize_disallowed_rel_path(cls):
     cls._disallowed_rel_path = bitarray(256)
     cls._disallowed_rel_path.setall(False)
@@ -368,6 +376,7 @@ def initialize(cls):
 
     initialize_delims(cls)
     initialize_scheme(cls)
+    initialize_rel_path(cls)
     initialize_disallowed_rel_path(cls)
     initialize_disallowed_opaque_part(cls)
     initialize_allowed_query(cls)
@@ -381,8 +390,8 @@ class URICustom:
     def __init__(self, s: str = None, strict: bool = False, charset: str = None):
         self._authority = None
         self.protocol_charset = charset
-        self._uri:list = []
-        self._opaque:list = []
+        self._uri: list = []
+        self._opaque: list = []
         self.authority = None
         self._host = None
         self._is_reg_name: bool = False
@@ -415,7 +424,8 @@ class URICustom:
         from_index = 0
         next_index = original.find('@')
         if next_index != -1:
-            userinfo = original[:next_index] if escaped else urllib.parse.quote(original[:next_index], safe=URICustom._allowed_userinfo)
+            userinfo = original[:next_index] if escaped else urllib.parse.quote(original[:next_index],
+                                                                                safe=URICustom._allowed_userinfo)
             URICustom._userinfo = userinfo.encode(charset)
             from_index = next_index + 1
 
@@ -427,7 +437,8 @@ class URICustom:
             else:
                 next_index += 1
             # In IPv6reference, '[', ']' should be excluded
-            self._host = original[from_index:next_index] if escaped else urllib.parse.quote(original[from_index:next_index], safe=URICustom._allowed_IPv6reference)
+            self._host = original[from_index:next_index] if escaped else urllib.parse.quote(
+                original[from_index:next_index], safe=URICustom._allowed_IPv6reference)
             # Set flag
             self._is_IPv6reference = True
         else:  # only for !_is_IPv6reference
@@ -484,12 +495,12 @@ class URICustom:
     def _validate_helper(self, component: list, s_offset: int, e_offset: int, generous: bitarray):
         if e_offset == -1:
             e_offset = len(component) - 1
-        for i in range(s_offset, e_offset+1):
+        for i in range(s_offset, e_offset + 1):
             if not generous.__getitem__(component[i]):
                 return False
         return True
 
-    def setURI(self):   # to be revised A LOT
+    def setURI(self):  # to be revised A LOT
         # Initialize a string buffer
         buf = []
 
@@ -497,7 +508,7 @@ class URICustom:
         # ^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?
 
         if self._scheme is not None:
-            buf.append(self._scheme + ':')
+            buf.append(str(self._scheme) + ':')
 
         if self.is_net_path:
             buf.append('//')
@@ -512,7 +523,7 @@ class URICustom:
                 buf.append(self._path)
 
         if self._query is not None:
-            buf.append('?' + self._query)
+            buf.append('?' + str(self._query))
 
         # Ignore the fragment identifier
 
@@ -571,13 +582,15 @@ class URICustom:
             at_idx = self.index_first_of(escaped_path, "/", 0)
             if at_idx == 0:
                 raise Exception("incorrect path")
-            if at_idx > 0 and not self._validate_helper(escaped_path, 0, at_idx-1, URICustom._rel_segment) and \
-                not self._validate_helper(escaped_path, at_idx, -1, URICustom._abs_path) or \
-                at_idx < 0 and not self._validate_helper(escaped_path, 0, -1, URICustom._rel_segment):
+            if at_idx > 0 and not self._validate_helper(escaped_path, 0, at_idx - 1, URICustom._rel_segment) and \
+                    not self._validate_helper(escaped_path, at_idx, -1, URICustom._abs_path) or \
+                    at_idx < 0 and not self._validate_helper(escaped_path, 0, -1, URICustom._rel_segment):
                 raise Exception("escaped relative path not valid")
             self._path = escaped_path
         elif self._is_opaque_part:
-            if not URICustom._uric_no_slash.__getitem__(escaped_path[0]) and not self._validate_helper(escaped_path, 1, -1, URICustom._uric):
+            if not URICustom._uric_no_slash.__getitem__(escaped_path[0]) and not self._validate_helper(escaped_path, 1,
+                                                                                                       -1,
+                                                                                                       URICustom._uric):
                 raise Exception("escaped opaque part not valid")
             self._opaque = escaped_path
         else:
@@ -593,8 +606,23 @@ class URICustom:
         if self.is_net_path or self.is_abs_path:
             self._path = self.encode(path, URICustom._allowed_abs_path, charset)
         elif self.is_rel_path:
-            pass  # to be continued later!
-
+            buff = []
+            at_idx = path.find('/')
+            if at_idx == 0:
+                raise Exception("incorrect path")
+            if at_idx > 0:
+                buff.append(self.encode(path[:at_idx], URICustom._allowed_rel_path, charset))
+                buff.append(self.encode(path[at_idx:], URICustom._allowed_abs_path, charset))
+            else:
+                buff.append(self.encode(path, URICustom._allowed_rel_path, charset))
+            self._path = ''.join(buff)
+        elif self._is_opaque_part:
+            buf = []
+            buf.insert(0, self.encode(path[0], URICustom._uric_no_slash, charset))
+            buf.insert(1, self.encode(path[1:], URICustom._uric, charset))
+            self._opaque = ''.join(buf)
+        else:
+            raise Exception("incorrect path")
 
     def get_protocol_charset(self):
         if self.protocol_charset is not None:
@@ -622,18 +650,52 @@ class URICustom:
         rawdata = url_codec.encode_url(allowed, self.__getBytes(original, charset))
         return rawdata.decode('ascii')
 
+    def _is_abs_path(self):
+        return self.is_abs_path
+
+    def normalize(self):
+        if self._is_abs_path():
+            if self._path is None:
+                return None
+            self.setURI()
+
+    def toString(self):
+        return self.getEscapedURI()
+
+    def getEscapedURI(self):
+        return None if self._uri is None else str(self._uri)
+
+    def getScheme(self):
+        return None if self._scheme is None else str(self._scheme)
+
+    def getAuthority(self):
+        return None if self._authority is None else 0
+
+    def decode(self, component, charset: str):
+        if component is None:
+            raise Exception("Component array of chars may not be null")
+        rawdata = []
+        try:
+            rawdata = URLCodec.decode_url(component.encode('ascii'))
+        except UnicodeDecodeError as e:
+            raise Exception(e)
+        rawdata.decode(charset)
 
 
-def check():
-    b = bitarray(256)
-    b.setall(False)
-    print(b)
-    for i in range(48, 58, 1):
-        b.__setitem__(i, True)
-    print(b)
+
+
+
+
+# def check():
+#     b = bitarray(256)
+#     b.setall(False)
+#     print(b)
+#     for i in range(48, 58, 1):
+#         b.__setitem__(i, True)
+#     print(b)
 
 
 uri = URICustom()
 # print(uri.ay7aga)
-# print(URICustom._rel_segment)
+print(URICustom._rel_segment)
 # check()
