@@ -1,11 +1,11 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 
 
-class ResourceContainer:
+class ResourceContainer(ABC):
     @abstractmethod
-    def get_name(self):
+    def get_name(self) -> str:
         pass
 
     @abstractmethod
-    def is_compressed(self):
+    def is_compressed(self) -> bool:
         pass

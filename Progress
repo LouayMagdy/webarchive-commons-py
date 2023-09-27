@@ -1,6 +1,6 @@
 ResourceExtractor.py
-    ResourceProducer.py
-    EnvelopedResourceFile.py
+    ResourceProducer.py --------------> ok
+    EnvelopedResourceFile.py ---------> ok ### some signatures changed
         ResourceFactory.py ------------> ok ### to use input and output stream, look at ./experimental/stream_tester.py
             ResourceContainer.py ----------------> ok
             MetaData.py --------------------> ok
@@ -11,12 +11,64 @@ ResourceExtractor.py
                     WARCConstants.py -------------> ok
                 AbstractResource  -----> ok ### to use input and output stream, look at ./experimental/stream_tester.py
                     Resource.py --------------> ok
-                StreamWrappedInputStream.py ---------> ok ### look at the example at the end of this file
+                StreamWrappedInputStream.py ---------> ok
                     PushBackOneByteInputStream.py ---------> ok
         TransformingResourceProducer.py ----------> ok
-        GZIPMemberSeries.py
+        GZIPMemberSeries.py -----------> ok
             GZIPConstants.py ----------> ok
-            GZIPDecoder.py
-                GZIPHeader.py
-                    GZIPStaticHeader.py
-                        ByteOP.py
+            GZIPDecoder.py  ------------> ok     #### take care of the input stream
+                GZIPHeader.py ---------> ok
+                    GZIPStaticHeader.py ---------> ok
+                        ByteOP.py -------> ok ###read_short(Data_input) and read_int(Data_input) not implemented as it is not used -- you may need to edit some functions to be compatible with the input streams
+                        GZIPFormatException.py -----------> ok
+                            RecoverableRecordFormatException.py ---------> ok
+                    GZIPFExtraRecords.py ---------> ok
+                        GZIPFExtraRecord.py ----------> ok
+                    CRCOutputStream.py -------> ok ### take care of the write_byte
+                        CRC32.py --------> ok
+                CRCInputStream.py ---------> ok
+            GZIPSeriesMember.py ----------> ok
+                GZIPFooter.py --------> ok
+                CustomInflater.py -------> ok
+            Stream.py -----------> ok  ### used BytesIO to extend Closeable
+        GZIPResourceContainer.py ---------> ok
+            ResourceParseException.py ------> ok
+            GZIPResource.py ---------> ok
+                EOFObserver.py ---------> ok
+                EOFNotifyingInputStream.py ---------> ok  ### extending FilteringInputStream is replaced by having InputStream field
+                GZIPMetaData.py  --------> ok
+        RandomAccessFileStream.py --------> ok
+            AbstractBufferingStream.py ---------> ok
+        HTTP11Stream.py -------> ok
+        HDFSStream.py ---------> ok
+    ExtractorOutput.py ---------> ok
+    ProducerUtils.py
+        WARCFile.py
+            WARCResourceFactory.py
+                HttpResponseParser.py
+                    HttpResponseMessageParser.py ---------------> ok
+                        HttpMessageParser.py ----------------> ok
+                            HttpConstants.py ----------------> ok
+                            HttpParseException.py -----------> ok
+                        HttpResponseMessage.py --------------> ok
+                            HttpMessage.py ------------------> ok
+                            HttpResponseMessageObserver.py ----> ok
+                    HttpHeaderParser.py -------------> ok
+                        StartParseState.py -------------> ok
+                            ParseState.py ------------> ok
+                            NameParseState.py ---------------> ok
+                                PostNameParseState.py ------------> ok
+                                PostColonParseState.py ---------> ok
+                                    ValuePostCRParseState.py --------> ok
+                                    LineStartParseState.py -------> ok
+                                        PostBlankCRParseState.py ----> ok
+                                        EndParseState.py ------------> ok
+                                    ValueParseState.py ---------------> ok
+                                        ValuePostLWSPParseState.py ---------> ok
+                                LAXLineEatParseState.py -------------> ok
+                        HttpHeaderObserver.py -----------> ok
+                        HttpHeaders.py -----------> ok
+                            HttpHeader.py ----------> ok
+                            DateUtils.py -----------> ok
+
+

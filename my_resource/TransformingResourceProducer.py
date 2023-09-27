@@ -3,6 +3,7 @@ import os
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')))
 from my_resource.ResourceProducer import ResourceProducer
 from my_resource.ResourceFactory import ResourceFactory
+from my_resource.Resource import Resource
 
 
 class TransformingResourceProducer(ResourceProducer):
@@ -11,7 +12,7 @@ class TransformingResourceProducer(ResourceProducer):
         self._resource_producer = resource_producer
         self._resource_factory = resource_factory
 
-    def get_next(self):
+    def get_next(self) -> Resource | None:
         inner_resource = self._resource_producer.get_next()
         if inner_resource is None:
             return None
@@ -21,5 +22,5 @@ class TransformingResourceProducer(ResourceProducer):
     def close(self):
         self._resource_producer.close()
 
-    def get_context(self):
+    def get_context(self) -> str:
         return self._resource_producer.get_context()

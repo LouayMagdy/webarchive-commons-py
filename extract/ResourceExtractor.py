@@ -1,11 +1,21 @@
 import sys
+import os
 import logging
 
+sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')))
+from extract.ExtractorOutput import ExtractorOutput
 
+def add_logger(cls):
+    cls._logger = logging.getLogger(cls.__name__)
+    return cls
+
+
+@add_logger
 class ResourceExtractor:
-    _logger = logging.getLogger(__name__)
     TOOL_NAME = "extractor"
     TOOL_DESCRIPTION = "A tool for extracting metadata from WARC, ARC, and WAT files"
+    def __init__(self):
+        self.output_stream = None
 
     def _usage(self, exit_code):
         """
@@ -32,9 +42,11 @@ class ResourceExtractor:
         """
         if len(args) < 1 or len(args) > 4:
             return self._usage(1)
-        max, arg = sys.maxint, 0
+        max, arg, extractor_output = 1 << 32 - 1, 0, None
+        output_stream = sys.stdout if not self.output_stream else self.output_stream
         self._logger.setLevel(logging.WARNING)
         if args[0] == "-strict":
+
 
 
 
