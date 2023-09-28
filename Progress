@@ -67,7 +67,7 @@ ResourceExtractor.py
                                         ValuePostLWSPParseState.py ---------> ok
                                 LAXLineEatParseState.py -------------> ok
                         HttpHeaderObserver.py -----------> ok
-                        HttpHeaders.py
+                        HttpHeaders.py -----------> ok
                             HttpHeader.py ----------> ok
                             DateUtils.py -----------> ok
 

@@ -24,11 +24,11 @@ class HttpHeader:
 
     def write(self, output_stream):
         output_stream.write(self._name.encode(HttpConstants.get('UTF8')))
-        output_stream.write(HttpConstants.get('COLON'))
-        output_stream.write(HttpConstants.get('SP'))
+        output_stream.write(bytearray([HttpConstants.get('COLON')]))
+        output_stream.write(bytearray([HttpConstants.get('SP')]))
         output_stream.write(self._value.encode(HttpConstants.get('UTF8')))
-        output_stream.write(HttpConstants.get('CR'))
-        output_stream.write(HttpConstants.get('LF'))
+        output_stream.write(bytearray([HttpConstants.get('CR')]))
+        output_stream.write(bytearray([HttpConstants.get('LF')]))
 
     def to_string(self) -> str:
         return f"HttpHeader({self._name})({self._value})"
