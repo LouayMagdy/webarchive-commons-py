@@ -15,7 +15,6 @@
         <option value="$MODULE_DIR$/utils" />
         <option value="$MODULE_DIR$/streamcontext" />
         <option value="$MODULE_DIR$/formats" />
-        <option value="$MODULE_DIR$/experimental" />
       </list>
     </option>
   </component>

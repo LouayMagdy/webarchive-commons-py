@@ -53,7 +53,7 @@ ResourceExtractor.py
                         HttpResponseMessage.py --------------> ok
                             HttpMessage.py ------------------> ok
                             HttpResponseMessageObserver.py ----> ok
-                    HttpHeaderParser.py
+                    HttpHeaderParser.py -------------> ok
                         StartParseState.py -------------> ok
                             ParseState.py ------------> ok
                             NameParseState.py ---------------> ok

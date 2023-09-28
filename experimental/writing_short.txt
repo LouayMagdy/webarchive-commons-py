@@ -1,4 +1,0 @@
-  HTTP/1.5 200 OK
-Content-Type: text/html
-
-<html><body>Hello, world!</body></html>
